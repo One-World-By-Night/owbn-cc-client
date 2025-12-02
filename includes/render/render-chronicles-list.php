@@ -21,11 +21,13 @@ function ccc_render_chronicles_list(array $chronicles): string
         return '<p class="ccc-no-results">' . esc_html__('No chronicles found.', 'owbn-cc-client') . '</p>';
     }
 
-    $base_url = home_url('/' . ccc_get_chronicles_slug() . '/');
+    $detail_page_id = get_option(ccc_option_name('chronicles_detail_page'), 0);
+    $base_url = $detail_page_id ? get_permalink($detail_page_id) : '';
 
     ob_start();
 ?>
     <div class="ccc-chronicles-list">
+        <h1 class="ccc-page-title"><?php esc_html_e('Chronicles', 'owbn-cc-client'); ?></h1>
         <div class="ccc-list-header">
             <div class="ccc-col-title"><?php esc_html_e('Chronicle', 'owbn-cc-client'); ?></div>
             <div class="ccc-col-genres"><?php esc_html_e('Genres', 'owbn-cc-client'); ?></div>
@@ -48,14 +50,14 @@ function ccc_render_chronicles_list(array $chronicles): string
  * Render single chronicle row.
  *
  * @param array  $chronicle Chronicle data
- * @param string $base_url  Base URL for links
+ * @param string $base_url  Base URL for detail page
  * @return string HTML output
  */
 function ccc_render_chronicle_row(array $chronicle, string $base_url): string
 {
     $slug = $chronicle['slug'] ?? $chronicle['chronicle_slug'] ?? '';
     $title = $chronicle['title'] ?? __('Untitled', 'owbn-cc-client');
-    $url = $base_url . $slug . '/';
+    $url = $base_url ? add_query_arg('slug', $slug, $base_url) : '#';
 
     // Location fields
     $ooc = $chronicle['ooc_locations'] ?? [];

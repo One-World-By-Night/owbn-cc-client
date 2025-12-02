@@ -21,11 +21,13 @@ function ccc_render_coordinators_list(array $coordinators): string
         return '<p class="ccc-no-results">' . esc_html__('No coordinators found.', 'owbn-cc-client') . '</p>';
     }
 
-    $base_url = home_url('/' . ccc_get_coordinators_slug() . '/');
+    $detail_page_id = get_option(ccc_option_name('coordinators_detail_page'), 0);
+    $base_url = $detail_page_id ? get_permalink($detail_page_id) : '';
 
     ob_start();
 ?>
     <div class="ccc-coordinators-list">
+        <h1 class="ccc-page-title"><?php esc_html_e('Coordinators', 'owbn-cc-client'); ?></h1>
         <div class="ccc-list-header">
             <div class="ccc-col-office"><?php esc_html_e('Office', 'owbn-cc-client'); ?></div>
             <div class="ccc-col-coordinator"><?php esc_html_e('Coordinator', 'owbn-cc-client'); ?></div>
@@ -44,14 +46,14 @@ function ccc_render_coordinators_list(array $coordinators): string
  * Render single coordinator row.
  *
  * @param array  $coordinator Coordinator data
- * @param string $base_url    Base URL for links
+ * @param string $base_url    Base URL for detail page
  * @return string HTML output
  */
 function ccc_render_coordinator_row(array $coordinator, string $base_url): string
 {
     $slug = $coordinator['slug'] ?? '';
     $title = $coordinator['title'] ?? $coordinator['coordinator_title'] ?? __('Untitled', 'owbn-cc-client');
-    $url = $base_url . $slug . '/';
+    $url = $base_url ? add_query_arg('slug', $slug, $base_url) : '#';
 
     // Coordinator info
     $coord_info = $coordinator['coord_info'] ?? [];

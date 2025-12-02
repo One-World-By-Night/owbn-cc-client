@@ -55,6 +55,28 @@ add_action('admin_init', function () {
         'type' => 'string',
         'sanitize_callback' => 'sanitize_text_field',
     ]);
+
+    // Page Settings
+    register_setting($group, ccc_option_name('chronicles_list_page'), [
+        'type' => 'integer',
+        'default' => 0,
+        'sanitize_callback' => 'absint',
+    ]);
+    register_setting($group, ccc_option_name('chronicles_detail_page'), [
+        'type' => 'integer',
+        'default' => 0,
+        'sanitize_callback' => 'absint',
+    ]);
+    register_setting($group, ccc_option_name('coordinators_list_page'), [
+        'type' => 'integer',
+        'default' => 0,
+        'sanitize_callback' => 'absint',
+    ]);
+    register_setting($group, ccc_option_name('coordinators_detail_page'), [
+        'type' => 'integer',
+        'default' => 0,
+        'sanitize_callback' => 'absint',
+    ]);
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -80,6 +102,12 @@ function ccc_render_settings_page()
     $coord_mode    = get_option(ccc_option_name('coordinators_mode'), 'local');
     $coord_url     = get_option(ccc_option_name('coordinators_url'), '');
     $coord_key     = get_option(ccc_option_name('coordinators_api_key'), '');
+
+    // Page settings
+    $chron_list_page   = get_option(ccc_option_name('chronicles_list_page'), 0);
+    $chron_detail_page = get_option(ccc_option_name('chronicles_detail_page'), 0);
+    $coord_list_page   = get_option(ccc_option_name('coordinators_list_page'), 0);
+    $coord_detail_page = get_option(ccc_option_name('coordinators_detail_page'), 0);
 
 ?>
     <div class="wrap">
@@ -228,6 +256,68 @@ function ccc_render_settings_page()
                             <?php esc_html_e('Test Connection', 'owbn-cc-client'); ?>
                         </button>
                         <span id="ccc_coordinators_test_result"></span>
+                    </td>
+                </tr>
+            </table>
+
+            <hr />
+
+            <!-- PAGE SETTINGS -->
+            <h2><?php esc_html_e('Page Settings', 'owbn-cc-client'); ?></h2>
+            <p class="description"><?php esc_html_e('Select which pages display the lists and detail views. Pages are created automatically on plugin activation.', 'owbn-cc-client'); ?></p>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><?php esc_html_e('Chronicles List Page', 'owbn-cc-client'); ?></th>
+                    <td>
+                        <?php
+                        wp_dropdown_pages([
+                            'name'              => ccc_option_name('chronicles_list_page'),
+                            'selected'          => $chron_list_page,
+                            'show_option_none'  => __('— Select Page —', 'owbn-cc-client'),
+                            'option_none_value' => 0,
+                        ]);
+                        ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e('Chronicles Detail Page', 'owbn-cc-client'); ?></th>
+                    <td>
+                        <?php
+                        wp_dropdown_pages([
+                            'name'              => ccc_option_name('chronicles_detail_page'),
+                            'selected'          => $chron_detail_page,
+                            'show_option_none'  => __('— Select Page —', 'owbn-cc-client'),
+                            'option_none_value' => 0,
+                        ]);
+                        ?>
+                        <p class="description"><?php esc_html_e('Links from the list will use ?slug=xxx to pass the chronicle.', 'owbn-cc-client'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e('Coordinators List Page', 'owbn-cc-client'); ?></th>
+                    <td>
+                        <?php
+                        wp_dropdown_pages([
+                            'name'              => ccc_option_name('coordinators_list_page'),
+                            'selected'          => $coord_list_page,
+                            'show_option_none'  => __('— Select Page —', 'owbn-cc-client'),
+                            'option_none_value' => 0,
+                        ]);
+                        ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e('Coordinators Detail Page', 'owbn-cc-client'); ?></th>
+                    <td>
+                        <?php
+                        wp_dropdown_pages([
+                            'name'              => ccc_option_name('coordinators_detail_page'),
+                            'selected'          => $coord_detail_page,
+                            'show_option_none'  => __('— Select Page —', 'owbn-cc-client'),
+                            'option_none_value' => 0,
+                        ]);
+                        ?>
+                        <p class="description"><?php esc_html_e('Links from the list will use ?slug=xxx to pass the coordinator.', 'owbn-cc-client'); ?></p>
                     </td>
                 </tr>
             </table>

@@ -13,6 +13,9 @@
 
 defined('ABSPATH') || exit;
 
+require_once plugin_dir_path(__FILE__) . 'includes/activation.php';
+register_activation_hook(__FILE__, 'ccc_activate');
+
 /**
  * -----------------------------------------------------------------------------
  * LOAD INSTANCE-SPECIFIC PREFIX
