@@ -85,7 +85,11 @@ function ccc_fetch_local_list(string $route)
     $request = new WP_REST_Request('POST');
     $response = $func($request);
 
-    return is_wp_error($response) ? ['error' => $response->get_error_message()] : $response->get_data();
+    if (is_wp_error($response)) {
+        return ['error' => $response->get_error_message()];
+    }
+
+    return $response->get_data();
 }
 
 function ccc_fetch_local_detail(string $route, string $slug)
@@ -97,7 +101,8 @@ function ccc_fetch_local_detail(string $route, string $slug)
     }
 
     $request = new WP_REST_Request('POST');
-    $request->set_body_params(['slug' => $slug]);
+    $request->set_header('Content-Type', 'application/json');
+    $request->set_body(wp_json_encode(['slug' => $slug]));
     $response = $func($request);
 
     return is_wp_error($response) ? ['error' => $response->get_error_message()] : $response->get_data();
