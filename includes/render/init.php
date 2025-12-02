@@ -10,7 +10,7 @@
 defined('ABSPATH') || exit;
 
 // Render files will be loaded here
-require_once __DIR__ . '/template-loader.php';
+require_once __DIR__ . '/data-fetch.php';
 require_once __DIR__ . '/render-helpers.php';
 // Lists
 require_once __DIR__ . '/render-chronicles-list.php';

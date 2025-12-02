@@ -27,7 +27,6 @@ function ccc_render_coordinators_list(array $coordinators): string
     ob_start();
 ?>
     <div class="ccc-coordinators-list">
-        <h1 class="ccc-page-title"><?php esc_html_e('Coordinators', 'owbn-cc-client'); ?></h1>
         <div class="ccc-list-header">
             <div class="ccc-col-office"><?php esc_html_e('Office', 'owbn-cc-client'); ?></div>
             <div class="ccc-col-coordinator"><?php esc_html_e('Coordinator', 'owbn-cc-client'); ?></div>

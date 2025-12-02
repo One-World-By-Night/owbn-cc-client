@@ -12,7 +12,7 @@ defined('ABSPATH') || exit;
 /**
  * Plugin activation - create default pages.
  */
-function ccc_activate()
+function ccc_create_default_pages()
 {
     $pages = [
         'chronicles_list_page' => [

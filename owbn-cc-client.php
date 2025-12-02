@@ -13,8 +13,10 @@
 
 defined('ABSPATH') || exit;
 
+define('CCC_PLUGIN_URL', plugin_dir_url(__FILE__));
+
 require_once plugin_dir_path(__FILE__) . 'includes/activation.php';
-register_activation_hook(__FILE__, 'ccc_activate');
+register_activation_hook(__FILE__, 'ccc_create_default_pages');
 
 /**
  * -----------------------------------------------------------------------------

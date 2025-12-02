@@ -90,14 +90,14 @@ function ccc_enqueue_assets_forced()
 
     wp_enqueue_style(
         'ccc-tables',
-        plugin_dir_url(dirname(__FILE__)) . 'css/ccc-tables.css',
+        CCC_PLUGIN_URL . 'css/ccc-tables.css',
         [],
         '1.0.0'
     );
 
     wp_enqueue_script(
         'ccc-tables',
-        plugin_dir_url(dirname(__FILE__)) . 'js/ccc-tables.js',
+        CCC_PLUGIN_URL . 'js/ccc-tables.js',
         [],
         '1.0.0',
         true

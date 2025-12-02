@@ -27,7 +27,6 @@ function ccc_render_chronicles_list(array $chronicles): string
     ob_start();
 ?>
     <div class="ccc-chronicles-list">
-        <h1 class="ccc-page-title"><?php esc_html_e('Chronicles', 'owbn-cc-client'); ?></h1>
         <div class="ccc-list-header">
             <div class="ccc-col-title"><?php esc_html_e('Chronicle', 'owbn-cc-client'); ?></div>
             <div class="ccc-col-genres"><?php esc_html_e('Genres', 'owbn-cc-client'); ?></div>
