@@ -15,4 +15,4 @@ defined('ABSPATH') || exit;
 define('CCC_PREFIX', 'OWBN');
 
 // Human-readable label for admin UI
-define('CCC_LABEL', 'OWBN Network');
+define('CCC_LABEL', 'OWBN CC Client');

@@ -1,14 +1,14 @@
 <?php
 
 /**
- * OWBN-CC-Client: Chronicle & Coordinator Client
- * 
- * Embeddable client module for fetching and displaying chronicle/coordinator
- * data from remote or local OWBN Chronicle Plugin instances.
- * 
- * @package OWBN-CC-Client
- * @version 1.0.0
- * @author greghacke
+ * Plugin Name: OWBN CC Client
+ * Plugin URI: https://github.com/One-World-By-Night/owbn-cc-client
+ * Description: Embeddable client for fetching and displaying chronicle/coordinator data from remote or local OWBN Chronicle Plugin instances.
+ * Version: 1.0.0
+ * Author: greghacke
+ * Author URI: https://www.owbn.net
+ * Text Domain: owbn-cc-client
+ * License: GPL-2.0-or-later
  */
 
 defined('ABSPATH') || exit;
