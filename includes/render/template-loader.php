@@ -68,8 +68,9 @@ function ccc_render_page(string $route, string $action, $data, string $slug = ''
             ? ccc_render_chronicles_list($data)
             : ccc_render_coordinators_list($data);
     } else {
-        // Detail - JSON for now, will add render functions later
-        $content = '<pre>' . esc_html(wp_json_encode($data, JSON_PRETTY_PRINT)) . '</pre>';
+        $content = $route === 'chronicles'
+            ? ccc_render_chronicle_detail($data)
+            : '<pre>' . esc_html(wp_json_encode($data, JSON_PRETTY_PRINT)) . '</pre>';
     }
 
     // Output with theme wrapper
