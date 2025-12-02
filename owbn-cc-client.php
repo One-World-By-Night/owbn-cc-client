@@ -1,7 +1,7 @@
 <?php
 
 /**
- * CC-Client: Chronicle & Coordinator Client
+ * OWBN-CC-Client: Chronicle & Coordinator Client
  * 
  * Embeddable client module for fetching and displaying chronicle/coordinator
  * data from remote or local OWBN Chronicle Plugin instances.
