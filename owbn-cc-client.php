@@ -85,3 +85,16 @@ if (!defined($prefix . 'JS_URL')) {
 
 // Bootstrap the client module
 require_once constant($prefix . 'DIR') . 'includes/init.php';
+
+// Enqueue frontend assets when shortcode is present
+add_action('wp_enqueue_scripts', function () {
+    global $post;
+
+    if (!is_a($post, 'WP_Post') || !has_shortcode($post->post_content, 'cc-client')) {
+        return;
+    }
+
+    wp_enqueue_style('ccc-tables', CCC_PLUGIN_URL . 'css/ccc-tables.css', [], '1.0.0');
+    wp_enqueue_style('ccc-client', CCC_PLUGIN_URL . 'css/ccc-client.css', ['ccc-tables'], '1.0.0');
+    wp_enqueue_script('ccc-tables', CCC_PLUGIN_URL . 'js/ccc-tables.js', [], '1.0.0', true);
+});

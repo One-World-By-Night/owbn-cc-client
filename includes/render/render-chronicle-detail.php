@@ -48,6 +48,7 @@ function ccc_render_chronicle_detail(array $chronicle): string
 
         <?php echo ccc_render_chronicle_links($chronicle); ?>
         <?php echo ccc_render_chronicle_documents($chronicle); ?>
+        <?php echo ccc_render_chronicle_player_lists($chronicle); ?>
 
     </div>
 <?php
@@ -328,6 +329,28 @@ function ccc_render_chronicle_documents(array $chronicle): string
     <div id="ccc-chronicle-documents" class="ccc-chronicle-documents">
         <h2><?php esc_html_e('Documents', 'owbn-cc-client'); ?></h2>
         <?php echo ccc_render_document_links($docs); ?>
+    </div>
+<?php
+    return ob_get_clean();
+}
+
+/**
+ * Render Player Lists section.
+ */
+function ccc_render_chronicle_player_lists(array $chronicle): string
+{
+    $lists = $chronicle['player_lists'] ?? [];
+    $lists = array_filter($lists, fn($l) => !empty($l['list_name']));
+
+    if (empty($lists)) {
+        return '';
+    }
+
+    ob_start();
+?>
+    <div id="ccc-chronicle-player-lists" class="ccc-chronicle-player-lists">
+        <h2><?php esc_html_e('Player Lists', 'owbn-cc-client'); ?></h2>
+        <?php echo ccc_render_player_lists($lists); ?>
     </div>
 <?php
     return ob_get_clean();

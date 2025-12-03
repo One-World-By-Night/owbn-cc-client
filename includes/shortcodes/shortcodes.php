@@ -88,27 +88,38 @@ function ccc_enqueue_assets_forced()
     static $enqueued = false;
     if ($enqueued) return;
 
-    wp_enqueue_style(
+    // Register first (in case not already registered)
+    wp_register_style(
         'ccc-tables',
         CCC_PLUGIN_URL . 'css/ccc-tables.css',
         [],
         '1.0.0'
     );
 
-    wp_enqueue_style(
+    wp_register_style(
         'ccc-client',
         CCC_PLUGIN_URL . 'css/ccc-client.css',
         ['ccc-tables'],
         '1.0.0'
     );
 
-    wp_enqueue_script(
+    wp_register_script(
         'ccc-tables',
         CCC_PLUGIN_URL . 'js/ccc-tables.js',
         [],
         '1.0.0',
         true
     );
+
+    // Enqueue
+    wp_enqueue_style('ccc-tables');
+    wp_enqueue_style('ccc-client');
+    wp_enqueue_script('ccc-tables');
+
+    // Force print if headers already sent (shortcode runs late)
+    if (did_action('wp_head')) {
+        wp_print_styles(['ccc-tables', 'ccc-client']);
+    }
 
     $enqueued = true;
 }

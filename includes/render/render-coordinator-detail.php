@@ -34,6 +34,7 @@ function ccc_render_coordinator_detail(array $coordinator): string
         <?php echo ccc_render_coordinator_subcoords($coordinator); ?>
         <?php echo ccc_render_coordinator_documents($coordinator); ?>
         <?php echo ccc_render_coordinator_email_lists($coordinator); ?>
+        <?php echo ccc_render_coordinator_player_lists($coordinator); ?>
         <?php echo ccc_render_coordinator_content($coordinator); ?>
 
     </div>
@@ -229,6 +230,28 @@ function ccc_render_coordinator_email_lists(array $coordinator): string
                 </div>
             <?php endforeach; ?>
         </div>
+    </div>
+<?php
+    return ob_get_clean();
+}
+
+/**
+ * Render player lists.
+ */
+function ccc_render_coordinator_player_lists(array $coordinator): string
+{
+    $lists = $coordinator['player_lists'] ?? [];
+    $lists = array_filter($lists, fn($l) => !empty($l['list_name']));
+
+    if (empty($lists)) {
+        return '';
+    }
+
+    ob_start();
+?>
+    <div id="ccc-coordinator-player-lists" class="ccc-coordinator-player-lists">
+        <h2><?php esc_html_e('Player Lists', 'owbn-cc-client'); ?></h2>
+        <?php echo ccc_render_player_lists($lists); ?>
     </div>
 <?php
     return ob_get_clean();

@@ -394,3 +394,44 @@ function ccc_render_content_section(string $title, string $content, string $id =
 <?php
     return ob_get_clean();
 }
+
+/**
+ * Render player lists.
+ *
+ * @param array $lists Array of player list data
+ * @return string HTML output
+ */
+function ccc_render_player_lists(array $lists): string
+{
+    $lists = array_filter($lists, fn($l) => !empty($l['list_name']));
+
+    if (empty($lists)) {
+        return '';
+    }
+
+    ob_start();
+?>
+    <div class="ccc-player-lists">
+        <?php foreach ($lists as $list) : ?>
+            <div class="ccc-player-list-item">
+                <div class="ccc-player-list-name"><?php echo esc_html($list['list_name']); ?></div>
+                <div class="ccc-player-list-meta">
+                    <?php if (!empty($list['access'])) : ?>
+                        <span class="ccc-player-list-access"><?php echo esc_html($list['access']); ?></span>
+                    <?php endif; ?>
+                    <?php if (!empty($list['ic_ooc'])) : ?>
+                        <span class="ccc-player-list-type"><?php echo esc_html($list['ic_ooc']); ?></span>
+                    <?php endif; ?>
+                </div>
+                <?php if (!empty($list['address'])) : ?>
+                    <a class="ccc-player-list-email" href="mailto:<?php echo esc_attr($list['address']); ?>"><?php echo esc_html($list['address']); ?></a>
+                <?php endif; ?>
+                <?php if (!empty($list['signup_url'])) : ?>
+                    <a class="ccc-player-list-signup" href="<?php echo esc_url($list['signup_url']); ?>" target="_blank" rel="noopener"><?php esc_html_e('Sign Up', 'owbn-cc-client'); ?></a>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+    </div>
+<?php
+    return ob_get_clean();
+}
