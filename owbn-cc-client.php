@@ -4,7 +4,7 @@
  * Plugin Name: OWBN CC Client
  * Plugin URI: https://github.com/One-World-By-Night/owbn-cc-client
  * Description: Embeddable client for fetching and displaying chronicle/coordinator data from remote or local OWBN Chronicle Plugin instances.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: greghacke
  * Author URI: https://www.owbn.net
  * Text Domain: owbn-cc-client

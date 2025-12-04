@@ -6,7 +6,7 @@
  * Loads all module init.php files in dependency order.
  * 
  * @package OWBN-CC-Client
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 defined('ABSPATH') || exit;

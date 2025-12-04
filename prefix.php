@@ -6,7 +6,7 @@
  * Edit these values to match your site/plugin instance.
  * 
  * @package OWBN-CC-Client
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 defined('ABSPATH') || exit;

@@ -189,3 +189,45 @@
         font-size: 16px;
     }
 }
+
+/* Coordinator group styling */
+.ccc-coord-group {
+    margin-bottom: 30px;
+}
+
+.ccc-coord-group:last-child {
+    margin-bottom: 0;
+}
+
+.ccc-coord-group-header {
+    background: #34495e;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    padding: 12px 15px;
+    border-radius: 4px 4px 0 0;
+    margin-bottom: 0;
+}
+
+.ccc-coord-group .ccc-list-header {
+    border-radius: 0;
+}
+
+.ccc-coord-group .ccc-list-header > div {
+    cursor: default; /* No sorting */
+}
+
+.ccc-coord-group .ccc-list-header > div::after {
+    content: ''; /* Remove sort indicator */
+}
+
+.ccc-coord-group .ccc-list-header > div:hover {
+    background: #2c3e50; /* No hover effect */
+}
+
+@media (max-width: 768px) {
+    .ccc-coord-group-header {
+        font-size: 16px;
+        padding: 10px 12px;
+    }
+}

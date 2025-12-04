@@ -4,7 +4,7 @@
  * OWBN-CC-Client Core Init
  * 
  * @package OWBN-CC-Client
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 defined('ABSPATH') || exit;
