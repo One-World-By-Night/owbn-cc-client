@@ -4,7 +4,7 @@
  * OWBN-CC-Client Chronicles List Render
  * 
  * @package OWBN-CC-Client
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 defined('ABSPATH') || exit;
@@ -21,14 +21,27 @@ function ccc_render_chronicles_list(array $chronicles): string
         return '<p class="ccc-no-results">' . esc_html__('No chronicles found.', 'owbn-cc-client') . '</p>';
     }
 
+    // Sort by title ascending by default
+    usort($chronicles, function ($a, $b) {
+        return strcasecmp($a['title'] ?? '', $b['title'] ?? '');
+    });
+
     $detail_page_id = get_option(ccc_option_name('chronicles_detail_page'), 0);
     $base_url = $detail_page_id ? get_permalink($detail_page_id) : '';
 
     ob_start();
 ?>
+    <div class="ccc-chronicles-filters">
+        <input type="text" id="ccc-filter-genres" class="ccc-filter-input" placeholder="<?php esc_attr_e('Filter Genres...', 'owbn-cc-client'); ?>" data-column="1">
+        <input type="text" id="ccc-filter-region" class="ccc-filter-input" placeholder="<?php esc_attr_e('Filter Region...', 'owbn-cc-client'); ?>" data-column="2">
+        <input type="text" id="ccc-filter-state" class="ccc-filter-input" placeholder="<?php esc_attr_e('Filter State...', 'owbn-cc-client'); ?>" data-column="3">
+        <input type="text" id="ccc-filter-type" class="ccc-filter-input" placeholder="<?php esc_attr_e('Filter Type...', 'owbn-cc-client'); ?>" data-column="5">
+        <button type="button" id="ccc-clear-filters" class="ccc-clear-filters"><?php esc_html_e('Clear', 'owbn-cc-client'); ?></button>
+    </div>
+
     <div class="ccc-chronicles-list">
         <div class="ccc-list-header">
-            <div class="ccc-col-title"><?php esc_html_e('Chronicle', 'owbn-cc-client'); ?></div>
+            <div class="ccc-col-title sort-asc"><?php esc_html_e('Chronicle', 'owbn-cc-client'); ?></div>
             <div class="ccc-col-genres"><?php esc_html_e('Genres', 'owbn-cc-client'); ?></div>
             <div class="ccc-col-region"><?php esc_html_e('Region', 'owbn-cc-client'); ?></div>
             <div class="ccc-col-state"><?php esc_html_e('State/Province', 'owbn-cc-client'); ?></div>
@@ -41,6 +54,8 @@ function ccc_render_chronicles_list(array $chronicles): string
             <?php echo ccc_render_chronicle_row($chronicle, $base_url); ?>
         <?php endforeach; ?>
     </div>
+
+    <p class="ccc-no-results-filtered" style="display:none;"><?php esc_html_e('No chronicles match your filters.', 'owbn-cc-client'); ?></p>
 <?php
     return ob_get_clean();
 }

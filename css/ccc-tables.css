@@ -126,3 +126,66 @@
         margin-bottom: 6px;
     }
 }
+
+/* Filter inputs */
+.ccc-chronicles-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.ccc-filter-input {
+    flex: 1;
+    min-width: 120px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    -webkit-appearance: none; /* Better iOS styling */
+}
+
+.ccc-filter-input:focus {
+    outline: none;
+    border-color: #2980b9;
+    box-shadow: 0 0 0 2px rgba(41, 128, 185, 0.2);
+}
+
+.ccc-clear-filters {
+    padding: 8px 16px;
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    -webkit-appearance: none;
+}
+
+.ccc-clear-filters:hover,
+.ccc-clear-filters:active {
+    background: #c0392b;
+}
+
+@media (max-width: 768px) {
+    .ccc-chronicles-filters {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .ccc-filter-input {
+        width: 100%;
+        min-width: unset;
+        padding: 12px; /* Larger touch target */
+        font-size: 16px; /* Prevents iOS zoom on focus */
+    }
+    
+    .ccc-clear-filters {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+    }
+}

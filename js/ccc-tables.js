@@ -3,6 +3,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         initSortableTables();
+        initFilters();
     });
 
     function initSortableTables() {
@@ -28,19 +29,15 @@
         
         if (rows.length === 0) return;
 
-        // Determine sort direction
         const isAsc = clickedHeader.classList.contains('sort-asc');
         const direction = isAsc ? -1 : 1;
 
-        // Clear all sort classes
         header.querySelectorAll('div').forEach(function(col) {
             col.classList.remove('sort-asc', 'sort-desc');
         });
 
-        // Set new sort class
         clickedHeader.classList.add(isAsc ? 'sort-desc' : 'sort-asc');
 
-        // Sort rows
         rows.sort(function(a, b) {
             const aCell = a.children[columnIndex];
             const bCell = b.children[columnIndex];
@@ -50,17 +47,88 @@
             const aText = (aCell.textContent || '').trim().toLowerCase();
             const bText = (bCell.textContent || '').trim().toLowerCase();
 
-            // Handle empty/dash values - push to end
             if (aText === '—' || aText === '') return 1;
             if (bText === '—' || bText === '') return -1;
 
-            // Natural sort for mixed content
             return aText.localeCompare(bText, undefined, { numeric: true }) * direction;
         });
 
-        // Re-append rows in sorted order
         rows.forEach(function(row) {
             list.appendChild(row);
         });
+    }
+
+    function initFilters() {
+        const filterInputs = document.querySelectorAll('.ccc-filter-input');
+        const clearBtn = document.getElementById('ccc-clear-filters');
+        
+        if (filterInputs.length === 0) return;
+
+        filterInputs.forEach(function(input) {
+            input.addEventListener('input', debounce(applyFilters, 200));
+        });
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                filterInputs.forEach(function(input) {
+                    input.value = '';
+                });
+                applyFilters();
+            });
+        }
+    }
+
+    function applyFilters() {
+        const list = document.querySelector('.ccc-chronicles-list');
+        if (!list) return;
+
+        const rows = list.querySelectorAll('.ccc-list-row');
+        const filters = {};
+        
+        document.querySelectorAll('.ccc-filter-input').forEach(function(input) {
+            const col = parseInt(input.getAttribute('data-column'), 10);
+            const val = input.value.trim().toLowerCase();
+            if (val) {
+                filters[col] = val;
+            }
+        });
+
+        let visibleCount = 0;
+
+        rows.forEach(function(row) {
+            let show = true;
+
+            for (const col in filters) {
+                const cell = row.children[col];
+                if (!cell) continue;
+
+                const text = (cell.textContent || '').trim().toLowerCase();
+                if (text.indexOf(filters[col]) === -1) {
+                    show = false;
+                    break;
+                }
+            }
+
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+
+        // Show/hide no results message
+        const noResults = document.querySelector('.ccc-no-results-filtered');
+        if (noResults) {
+            noResults.style.display = visibleCount === 0 ? '' : 'none';
+        }
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function() {
+            const context = this;
+            const args = arguments;
+            clearTimeout(timeout);
+            timeout = setTimeout(function() {
+                func.apply(context, args);
+            }, wait);
+        };
     }
 })();
