@@ -3,208 +3,90 @@
 /**
  * OWBN-Client Data Fetch Functions
  * location: includes/render/data-fetch.php
+ * Thin wrapper around cached client-api functions.
+ * 
  * @package OWBN-Client
  * @version 2.0.0
  */
 
 defined('ABSPATH') || exit;
 
-// ══════════════════════════════════════════════════════════════════════════════
-// DATA FETCH
-// ══════════════════════════════════════════════════════════════════════════════
-
-function owc_fetch_list(string $route)
+/**
+ * Fetch list data (cached).
+ *
+ * @param string $route 'chronicles'|'coordinators'|'territories'
+ * @return array
+ */
+function owc_fetch_list(string $route): array
 {
-    $mode = get_option(owc_option_name($route . '_mode'), 'local');
-
-    if ($mode === 'local') {
-        return owc_fetch_local_list($route);
+    switch ($route) {
+        case 'chronicles':
+            $data = owc_get_chronicles();
+            break;
+        case 'coordinators':
+            $data = owc_get_coordinators();
+            break;
+        case 'territories':
+            $data = owc_get_territories();
+            break;
+        default:
+            return ['error' => 'Unknown route'];
     }
-    return owc_fetch_remote_list($route);
+
+    return is_wp_error($data) ? ['error' => $data->get_error_message()] : $data;
 }
 
-function owc_fetch_detail(string $route, $identifier)
+/**
+ * Fetch detail data (not cached).
+ *
+ * @param string     $route      'chronicles'|'coordinators'|'territories'
+ * @param string|int $identifier Slug or ID
+ * @return array
+ */
+function owc_fetch_detail(string $route, $identifier): array
 {
-    $mode = get_option(owc_option_name($route . '_mode'), 'local');
-
-    if ($mode === 'local') {
-        return owc_fetch_local_detail($route, $identifier);
+    switch ($route) {
+        case 'chronicles':
+            $data = owc_get_chronicle_detail((string) $identifier);
+            break;
+        case 'coordinators':
+            $data = owc_get_coordinator_detail((string) $identifier);
+            break;
+        case 'territories':
+            $data = owc_get_territory_detail((int) $identifier);
+            break;
+        default:
+            return ['error' => 'Unknown route'];
     }
-    return owc_fetch_remote_detail($route, $identifier);
+
+    if ($data === null) {
+        return ['error' => 'Feature disabled'];
+    }
+
+    return is_wp_error($data) ? ['error' => $data->get_error_message()] : $data;
 }
 
-function owc_fetch_territories_by_slug(string $slug)
+/**
+ * Fetch territories by slug (filters from cached list).
+ *
+ * @param string $slug Chronicle or coordinator slug
+ * @return array
+ */
+function owc_fetch_territories_by_slug(string $slug): array
 {
-    $mode = get_option(owc_option_name('territories_mode'), 'local');
+    // Filter from cached territories list for better performance
+    $all = owc_get_territories();
 
-    if ($mode === 'local') {
-        return owc_fetch_local_territories_by_slug($slug);
-    }
-    return owc_fetch_remote_territories_by_slug($slug);
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// LOCAL FETCH
-// ══════════════════════════════════════════════════════════════════════════════
-
-function owc_fetch_local_list(string $route)
-{
-    $func_map = [
-        'chronicles'   => 'owbn_api_get_chronicles',
-        'coordinators' => 'owbn_api_get_coordinators',
-        'territories'  => 'owbn_tm_api_get_territories',
-    ];
-
-    $func = $func_map[$route] ?? null;
-
-    if (!$func || !function_exists($func)) {
-        return ['error' => 'Local source not available'];
+    if (is_wp_error($all)) {
+        return ['error' => $all->get_error_message()];
     }
 
-    $request = new WP_REST_Request('POST');
-    $response = $func($request);
-
-    if (is_wp_error($response)) {
-        return ['error' => $response->get_error_message()];
+    if (empty($all)) {
+        return [];
     }
 
-    return $response->get_data();
-}
-
-function owc_fetch_local_detail(string $route, $identifier)
-{
-    $func_map = [
-        'chronicles'   => 'owbn_api_get_chronicle_detail',
-        'coordinators' => 'owbn_api_get_coordinator_detail',
-        'territories'  => 'owbn_tm_api_get_territory',
-    ];
-
-    $func = $func_map[$route] ?? null;
-
-    if (!$func || !function_exists($func)) {
-        return ['error' => 'Local source not available'];
-    }
-
-    $request = new WP_REST_Request('POST');
-    $request->set_header('Content-Type', 'application/json');
-
-    // Territories use ID, others use slug
-    if ($route === 'territories') {
-        $request->set_body(wp_json_encode(['id' => (int) $identifier]));
-    } else {
-        $request->set_body(wp_json_encode(['slug' => $identifier]));
-    }
-
-    $response = $func($request);
-
-    return is_wp_error($response) ? ['error' => $response->get_error_message()] : $response->get_data();
-}
-
-function owc_fetch_local_territories_by_slug(string $slug)
-{
-    if (!function_exists('owbn_tm_api_get_territories_by_slug')) {
-        return ['error' => 'Local source not available'];
-    }
-
-    $request = new WP_REST_Request('POST');
-    $request->set_header('Content-Type', 'application/json');
-    $request->set_body(wp_json_encode(['slug' => $slug]));
-
-    $response = owbn_tm_api_get_territories_by_slug($request);
-
-    return is_wp_error($response) ? ['error' => $response->get_error_message()] : $response->get_data();
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// REMOTE FETCH
-// ══════════════════════════════════════════════════════════════════════════════
-
-function owc_fetch_remote_list(string $route)
-{
-    $url = get_option(owc_option_name($route . '_url'), '');
-    $key = get_option(owc_option_name($route . '_api_key'), '');
-
-    if (empty($url)) {
-        return ['error' => 'Remote URL not configured'];
-    }
-
-    $response = wp_remote_post(trailingslashit($url) . $route, [
-        'timeout' => 15,
-        'headers' => [
-            'Content-Type' => 'application/json',
-            'x-api-key'    => $key,
-        ],
-        'body' => wp_json_encode([]),
-    ]);
-
-    if (is_wp_error($response)) {
-        return ['error' => $response->get_error_message()];
-    }
-
-    return json_decode(wp_remote_retrieve_body($response), true) ?: [];
-}
-
-function owc_fetch_remote_detail(string $route, $identifier)
-{
-    $url = get_option(owc_option_name($route . '_url'), '');
-    $key = get_option(owc_option_name($route . '_api_key'), '');
-
-    if (empty($url)) {
-        return ['error' => 'Remote URL not configured'];
-    }
-
-    $endpoint_map = [
-        'chronicles'   => 'chronicle-detail',
-        'coordinators' => 'coordinator-detail',
-        'territories'  => 'territory',
-    ];
-
-    $endpoint = $endpoint_map[$route] ?? $route . '-detail';
-
-    // Territories use ID, others use slug
-    if ($route === 'territories') {
-        $body = ['id' => (int) $identifier];
-    } else {
-        $body = ['slug' => $identifier];
-    }
-
-    $response = wp_remote_post(trailingslashit($url) . $endpoint, [
-        'timeout' => 15,
-        'headers' => [
-            'Content-Type' => 'application/json',
-            'x-api-key'    => $key,
-        ],
-        'body' => wp_json_encode($body),
-    ]);
-
-    if (is_wp_error($response)) {
-        return ['error' => $response->get_error_message()];
-    }
-
-    return json_decode(wp_remote_retrieve_body($response), true) ?: ['error' => 'Not found'];
-}
-
-function owc_fetch_remote_territories_by_slug(string $slug)
-{
-    $url = get_option(owc_option_name('territories_url'), '');
-    $key = get_option(owc_option_name('territories_api_key'), '');
-
-    if (empty($url)) {
-        return ['error' => 'Remote URL not configured'];
-    }
-
-    $response = wp_remote_post(trailingslashit($url) . 'territories-by-slug', [
-        'timeout' => 15,
-        'headers' => [
-            'Content-Type' => 'application/json',
-            'x-api-key'    => $key,
-        ],
-        'body' => wp_json_encode(['slug' => $slug]),
-    ]);
-
-    if (is_wp_error($response)) {
-        return ['error' => $response->get_error_message()];
-    }
-
-    return json_decode(wp_remote_retrieve_body($response), true) ?: [];
+    return array_values(array_filter($all, function ($t) use ($slug) {
+        $slugs = $t['slugs'] ?? [];
+        return is_array($slugs) && in_array($slug, $slugs, true);
+    }));
 }
