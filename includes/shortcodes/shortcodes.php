@@ -2,7 +2,7 @@
 
 /**
  * OWBN-Client Shortcode
- * 
+ * location: includes/shortcodes/shortcodes.php
  * @package OWBN-Client
  * @version 2.0.0
  */
@@ -49,7 +49,7 @@ function owc_shortcode_handler($atts)
     }
 
     // Enqueue assets
-    owc_enqueue_assets_forced();
+    owc_enqueue_assets();
 
     switch ($type) {
         case 'chronicle-list':
@@ -109,25 +109,33 @@ function owc_shortcode_handler($atts)
 }
 
 /**
- * Force enqueue assets when shortcode is used.
+ * Enqueue assets when shortcode is used.
  */
-function owc_enqueue_assets_forced()
+function owc_enqueue_assets()
 {
     static $enqueued = false;
     if ($enqueued) return;
 
+    // Build the constant prefix: e.g., 'MYSITE_OWC_'
+    $prefix = strtoupper(preg_replace('/[^A-Z0-9]/i', '', OWC_PREFIX)) . '_OWC_';
+
+    // Get URLs and version from dynamic constants
+    $css_url = defined($prefix . 'CSS_URL') ? constant($prefix . 'CSS_URL') : OWC_PLUGIN_URL . 'includes/assets/css/';
+    $js_url  = defined($prefix . 'JS_URL') ? constant($prefix . 'JS_URL') : OWC_PLUGIN_URL . 'includes/assets/js/';
+    $version = defined($prefix . 'VERSION') ? constant($prefix . 'VERSION') : '2.0.0';
+
     wp_register_style(
         'owc-client',
-        OWC_PLUGIN_URL . 'assets/css/owc-client.css',
+        $css_url . 'owc-client.css',
         [],
-        OWC_VERSION
+        $version
     );
 
     wp_register_script(
         'owc-client',
-        OWC_PLUGIN_URL . 'assets/js/owc-client.js',
+        $js_url . 'owc-client.js',
         [],
-        OWC_VERSION,
+        $version,
         true
     );
 

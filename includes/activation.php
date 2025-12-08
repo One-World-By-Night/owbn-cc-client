@@ -2,7 +2,7 @@
 
 /**
  * OWBN-Client Activation
- * 
+ * location: includes/activation.php
  * @package OWBN-Client
  * @version 2.0.0
  */
@@ -17,38 +17,36 @@ function owc_create_default_pages()
     $pages = [
         'chronicles_list_page' => [
             'title'   => __('Chronicles', 'owbn-client'),
-            'content' => '[owbn-client type="chronicle-list"]',
+            'content' => '[owc-client type="chronicle-list"]',
         ],
         'chronicles_detail_page' => [
             'title'   => __('Chronicle Detail', 'owbn-client'),
-            'content' => '[owbn-client type="chronicle-detail"]',
+            'content' => '[owc-client type="chronicle-detail"]',
         ],
         'coordinators_list_page' => [
             'title'   => __('Coordinators', 'owbn-client'),
-            'content' => '[owbn-client type="coordinator-list"]',
+            'content' => '[owc-client type="coordinator-list"]',
         ],
         'coordinators_detail_page' => [
             'title'   => __('Coordinator Detail', 'owbn-client'),
-            'content' => '[owbn-client type="coordinator-detail"]',
+            'content' => '[owc-client type="coordinator-detail"]',
         ],
         'territories_list_page' => [
             'title'   => __('Territories', 'owbn-client'),
-            'content' => '[owbn-client type="territory-list"]',
+            'content' => '[owc-client type="territory-list"]',
         ],
         'territories_detail_page' => [
             'title'   => __('Territory Detail', 'owbn-client'),
-            'content' => '[owbn-client type="territory-detail"]',
+            'content' => '[owc-client type="territory-detail"]',
         ],
     ];
 
     foreach ($pages as $option_key => $page_data) {
-        // Skip if page already set
         $existing_id = get_option(owc_option_name($option_key), 0);
         if ($existing_id && get_post_status($existing_id)) {
             continue;
         }
 
-        // Create page
         $page_id = wp_insert_post([
             'post_title'   => $page_data['title'],
             'post_content' => $page_data['content'],
