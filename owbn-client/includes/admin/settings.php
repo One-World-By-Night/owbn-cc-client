@@ -4,7 +4,7 @@
  * OWBN-Client Settings Page
  * location : includes/admin/settings.php
  * @package OWBN-Client
- * @version 2.0.0
+ * @version 2.1.0
  */
 
 defined('ABSPATH') || exit;
@@ -124,6 +124,22 @@ function owc_render_settings_page()
 {
     if (!current_user_can('manage_options')) {
         return;
+    }
+
+    // Handle cache clear
+    if (isset($_POST['owc_clear_cache']) && check_admin_referer('owc_clear_cache_action')) {
+        owc_clear_all_caches();
+        add_settings_error('owc_settings', 'cache_cleared', __('Cache cleared successfully.', 'owbn-client'), 'success');
+    }
+
+    // Handle cache refresh
+    if (isset($_POST['owc_refresh_cache']) && check_admin_referer('owc_refresh_cache_action')) {
+        $result = owc_refresh_all_caches();
+        if (is_wp_error($result)) {
+            add_settings_error('owc_settings', 'cache_refresh_failed', $result->get_error_message(), 'error');
+        } else {
+            add_settings_error('owc_settings', 'cache_refreshed', __('Cache refreshed successfully.', 'owbn-client'), 'success');
+        }
     }
 
     $client_id = owc_get_client_id();
@@ -444,6 +460,35 @@ function owc_render_settings_page()
 
             <?php submit_button(); ?>
         </form>
+
+        <hr />
+
+        <!-- CACHE MANAGEMENT -->
+        <h2><?php esc_html_e('Cache Management', 'owbn-client'); ?></h2>
+        <p class="description"><?php esc_html_e('Clear cached data to fetch fresh content from data sources.', 'owbn-client'); ?></p>
+
+        <table class="form-table" role="presentation">
+            <tr>
+                <th scope="row"><?php esc_html_e('Clear Cache', 'owbn-client'); ?></th>
+                <td>
+                    <form method="post" style="display:inline;">
+                        <?php wp_nonce_field('owc_clear_cache_action'); ?>
+                        <?php submit_button(__('Clear All Cache', 'owbn-client'), 'secondary', 'owc_clear_cache', false); ?>
+                    </form>
+                    <p class="description"><?php esc_html_e('Removes all cached data. Next page load will fetch fresh data.', 'owbn-client'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('Refresh Cache', 'owbn-client'); ?></th>
+                <td>
+                    <form method="post" style="display:inline;">
+                        <?php wp_nonce_field('owc_refresh_cache_action'); ?>
+                        <?php submit_button(__('Refresh All Cache', 'owbn-client'), 'secondary', 'owc_refresh_cache', false); ?>
+                    </form>
+                    <p class="description"><?php esc_html_e('Clears and immediately re-fetches all data from sources.', 'owbn-client'); ?></p>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <script>

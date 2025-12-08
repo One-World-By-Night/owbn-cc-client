@@ -6,7 +6,7 @@
  * Handles remote and local API calls to fetch chronicle/coordinator/territory data.
  * 
  * @package OWBN-Client
- * @version 2.0.0
+ * @version 2.1.0
  */
 
 defined('ABSPATH') || exit;
@@ -133,13 +133,17 @@ function owc_get_local_territories()
         $countries = get_post_meta($id, '_owbn_tm_countries', true);
         $slugs = get_post_meta($id, '_owbn_tm_slug', true);
         return [
-            'id'        => $id,
-            'title'     => $p->post_title,
-            'countries' => is_array($countries) ? array_values(array_filter($countries)) : [],
-            'region'    => get_post_meta($id, '_owbn_tm_region', true) ?: '',
-            'location'  => get_post_meta($id, '_owbn_tm_location', true) ?: '',
-            'detail'    => get_post_meta($id, '_owbn_tm_detail', true) ?: '',
-            'slugs'     => is_array($slugs) ? array_values(array_filter($slugs)) : [],
+            'id'          => $id,
+            'title'       => $p->post_title,
+            'countries'   => is_array($countries) ? array_values(array_filter($countries)) : [],
+            'region'      => get_post_meta($id, '_owbn_tm_region', true) ?: '',
+            'location'    => get_post_meta($id, '_owbn_tm_location', true) ?: '',
+            'detail'      => get_post_meta($id, '_owbn_tm_detail', true) ?: '',
+            'owner'       => get_post_meta($id, '_owbn_tm_owner', true) ?: '',
+            'slugs'       => is_array($slugs) ? array_values(array_filter($slugs)) : [],
+            'description' => $p->post_content,
+            'update_date' => get_post_meta($id, '_owbn_tm_update_date', true) ?: '',
+            'update_user' => get_post_meta($id, '_owbn_tm_update_user', true) ?: '',
         ];
     }, $posts);
 }
@@ -280,6 +284,8 @@ function owc_get_local_territory_detail(int $id)
         'owner'       => get_post_meta($id, '_owbn_tm_owner', true) ?: '',
         'slugs'       => is_array($slugs) ? array_values(array_filter($slugs)) : [],
         'description' => $post->post_content,
+        'update_date' => get_post_meta($id, '_owbn_tm_update_date', true) ?: '',
+        'update_user' => get_post_meta($id, '_owbn_tm_update_user', true) ?: '',
     ];
 }
 
@@ -315,6 +321,8 @@ function owc_get_local_territories_by_slug(string $slug)
             'owner'       => get_post_meta($id, '_owbn_tm_owner', true) ?: '',
             'slugs'       => array_values(array_filter($slugs)),
             'description' => $post->post_content,
+            'update_date' => get_post_meta($id, '_owbn_tm_update_date', true) ?: '',
+            'update_user' => get_post_meta($id, '_owbn_tm_update_user', true) ?: '',
         ];
     }
 

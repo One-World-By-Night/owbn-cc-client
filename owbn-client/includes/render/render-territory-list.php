@@ -2,17 +2,17 @@
 
 /**
  * OWBN-Client Render Territory List
- * location: includes/render/render-territories-list.php
- * Paginated, sortable territory listing.
+ * location: includes/render/render-territory-list.php
+ * Client-side paginated, sortable, searchable territory listing with modal detail.
  * 
  * @package OWBN-Client
- * @version 2.0.0
+ * @version 2.1.0
  */
 
 defined('ABSPATH') || exit;
 
 /**
- * Render territory list with pagination and sorting.
+ * Render territory list with client-side pagination, sorting, search, and modal.
  *
  * @param array  $territories Array of territory data
  * @param string $context     'chronicle'|'coordinator'|'' for slug linking
@@ -28,247 +28,309 @@ function owc_render_territories_list(array $territories, string $context = ''): 
         return '<div class="owc-notice">' . esc_html__('No territories found.', 'owbn-client') . '</div>';
     }
 
-    $per_page = 25;
-    $total    = count($territories);
-    $pages    = (int) ceil($total / $per_page);
-
-    // Get current sort/page from URL
-    $current_page = max(1, absint($_GET['tpage'] ?? 1));
-    $sort_by      = sanitize_key($_GET['tsort'] ?? 'title');
-    $sort_dir     = strtolower($_GET['tdir'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
-
-    // Sort territories
-    $territories = owc_sort_territories($territories, $sort_by, $sort_dir);
-
-    // Paginate
-    $offset = ($current_page - 1) * $per_page;
-    $paged  = array_slice($territories, $offset, $per_page);
+    $container_id = 'owc-territories-' . wp_unique_id();
+    $slug_types = owc_get_all_slug_types();
 
     ob_start();
 ?>
-    <div class="owc-territories-list" data-context="<?php echo esc_attr($context); ?>">
-        <?php echo owc_render_territories_sort_controls($sort_by, $sort_dir); ?>
+    <div class="owc-territories-list" id="<?php echo esc_attr($container_id); ?>">
+        <div class="owc-terr-controls">
+            <div class="owc-terr-search">
+                <input type="text" class="owc-terr-search-input" placeholder="<?php esc_attr_e('Search territories...', 'owbn-client'); ?>">
+            </div>
+            <div class="owc-terr-sort-wrap">
+                <label>
+                    <?php esc_html_e('Sort:', 'owbn-client'); ?>
+                    <select class="owc-terr-sort">
+                        <option value="title-asc"><?php esc_html_e('Title (A–Z)', 'owbn-client'); ?></option>
+                        <option value="title-desc"><?php esc_html_e('Title (Z–A)', 'owbn-client'); ?></option>
+                    </select>
+                </label>
+            </div>
+        </div>
 
         <table class="owc-territories-table">
             <thead>
                 <tr>
-                    <?php echo owc_render_sort_header('title', __('Title', 'owbn-client'), $sort_by, $sort_dir); ?>
-                    <?php echo owc_render_sort_header('country', __('Country', 'owbn-client'), $sort_by, $sort_dir); ?>
-                    <?php echo owc_render_sort_header('region', __('Region', 'owbn-client'), $sort_by, $sort_dir); ?>
-                    <th><?php esc_html_e('Location', 'owbn-client'); ?></th>
-                    <th><?php esc_html_e('Assigned To', 'owbn-client'); ?></th>
+                    <th class="owc-col-title"><?php esc_html_e('Title', 'owbn-client'); ?></th>
+                    <th class="owc-col-detail"><?php esc_html_e('Detail', 'owbn-client'); ?></th>
+                    <th class="owc-col-slugs"><?php esc_html_e('Assigned To', 'owbn-client'); ?></th>
                 </tr>
             </thead>
-            <tbody>
-                <?php foreach ($paged as $territory) : ?>
-                    <?php echo owc_render_territory_row($territory, $context); ?>
-                <?php endforeach; ?>
-            </tbody>
+            <tbody class="owc-terr-tbody"></tbody>
         </table>
 
-        <?php if ($pages > 1) : ?>
-            <?php echo owc_render_territories_pagination($current_page, $pages, $sort_by, $sort_dir); ?>
-        <?php endif; ?>
+        <div class="owc-terr-pagination">
+            <button type="button" class="owc-terr-prev" disabled>&laquo; <?php esc_html_e('Prev', 'owbn-client'); ?></button>
+            <span class="owc-terr-page-info"></span>
+            <button type="button" class="owc-terr-next"><?php esc_html_e('Next', 'owbn-client'); ?> &raquo;</button>
+        </div>
 
-        <div class="owc-territories-count">
-            <?php printf(
-                esc_html__('Showing %1$d–%2$d of %3$d territories', 'owbn-client'),
-                $offset + 1,
-                min($offset + $per_page, $total),
-                $total
-            ); ?>
+        <div class="owc-territories-count"></div>
+
+        <!-- Modal -->
+        <div class="owc-terr-modal" hidden>
+            <div class="owc-terr-modal-backdrop"></div>
+            <div class="owc-terr-modal-content">
+                <button type="button" class="owc-terr-modal-close">&times;</button>
+                <div class="owc-terr-modal-body"></div>
+            </div>
         </div>
     </div>
-<?php
-    return ob_get_clean();
-}
 
-/**
- * Render single territory row.
- *
- * @param array  $territory
- * @param string $context
- * @return string HTML
- */
-function owc_render_territory_row(array $territory, string $context): string
-{
-    $title     = $territory['title'] ?? '';
-    $countries = $territory['countries'] ?? [];
-    $region    = $territory['region'] ?? '';
-    $location  = $territory['location'] ?? '';
-    $detail    = $territory['detail'] ?? '';
-    $slugs     = $territory['slugs'] ?? [];
-    $id        = $territory['id'] ?? 0;
-
-    // Combine location + detail
-    $loc_parts = array_filter([$location, $detail]);
-    $loc_str   = implode(' — ', $loc_parts);
-
-    $terr_slug = owc_get_territories_slug();
-    $title_link = sprintf(
-        '<a href="/%s/%d/">%s</a>',
-        esc_attr($terr_slug),
-        esc_attr($id),
-        esc_html($title)
-    );
-
-    ob_start();
-?>
-    <tr data-id="<?php echo esc_attr($id); ?>">
-        <td class="owc-col-title"><?php echo $title_link; ?></td>
-        <td class="owc-col-country"><?php echo esc_html(owc_render_territory_countries($countries)); ?></td>
-        <td class="owc-col-region"><?php echo esc_html($region); ?></td>
-        <td class="owc-col-location"><?php echo esc_html($loc_str); ?></td>
-        <td class="owc-col-slugs"><?php echo owc_render_territory_slugs($slugs, $context); ?></td>
-    </tr>
-<?php
-    return ob_get_clean();
-}
-
-/**
- * Sort territories array.
- *
- * @param array  $territories
- * @param string $sort_by
- * @param string $sort_dir
- * @return array
- */
-function owc_sort_territories(array $territories, string $sort_by, string $sort_dir): array
-{
-    usort($territories, function ($a, $b) use ($sort_by, $sort_dir) {
-        switch ($sort_by) {
-            case 'country':
-                $va = implode(', ', $a['countries'] ?? []);
-                $vb = implode(', ', $b['countries'] ?? []);
-                break;
-            case 'region':
-                $va = $a['region'] ?? '';
-                $vb = $b['region'] ?? '';
-                break;
-            case 'title':
-            default:
-                $va = $a['title'] ?? '';
-                $vb = $b['title'] ?? '';
-                break;
-        }
-
-        $cmp = strcasecmp($va, $vb);
-        return $sort_dir === 'desc' ? -$cmp : $cmp;
-    });
-
-    return $territories;
-}
-
-/**
- * Render sortable column header.
- *
- * @param string $key
- * @param string $label
- * @param string $current_sort
- * @param string $current_dir
- * @return string HTML
- */
-function owc_render_sort_header(string $key, string $label, string $current_sort, string $current_dir): string
-{
-    $is_active = ($current_sort === $key);
-    $new_dir   = ($is_active && $current_dir === 'asc') ? 'desc' : 'asc';
-    $url       = add_query_arg(['tsort' => $key, 'tdir' => $new_dir, 'tpage' => 1]);
-
-    $class = 'owc-sortable';
-    $arrow = '';
-
-    if ($is_active) {
-        $class .= ' owc-sorted';
-        $arrow = $current_dir === 'asc' ? ' ▲' : ' ▼';
-    }
-
-    return sprintf(
-        '<th class="%s"><a href="%s">%s%s</a></th>',
-        esc_attr($class),
-        esc_url($url),
-        esc_html($label),
-        $arrow
-    );
-}
-
-/**
- * Render sort controls dropdown.
- *
- * @param string $sort_by
- * @param string $sort_dir
- * @return string HTML
- */
-function owc_render_territories_sort_controls(string $sort_by, string $sort_dir): string
-{
-    ob_start();
-?>
-    <div class="owc-sort-controls">
-        <label for="owc-sort-select"><?php esc_html_e('Sort by:', 'owbn-client'); ?></label>
-        <select id="owc-sort-select" onchange="owcTerritorySort(this)">
-            <option value="title-asc" <?php selected($sort_by === 'title' && $sort_dir === 'asc'); ?>>
-                <?php esc_html_e('Title (A–Z)', 'owbn-client'); ?>
-            </option>
-            <option value="title-desc" <?php selected($sort_by === 'title' && $sort_dir === 'desc'); ?>>
-                <?php esc_html_e('Title (Z–A)', 'owbn-client'); ?>
-            </option>
-            <option value="country-asc" <?php selected($sort_by === 'country' && $sort_dir === 'asc'); ?>>
-                <?php esc_html_e('Country (A–Z)', 'owbn-client'); ?>
-            </option>
-            <option value="country-desc" <?php selected($sort_by === 'country' && $sort_dir === 'desc'); ?>>
-                <?php esc_html_e('Country (Z–A)', 'owbn-client'); ?>
-            </option>
-            <option value="region-asc" <?php selected($sort_by === 'region' && $sort_dir === 'asc'); ?>>
-                <?php esc_html_e('Region (A–Z)', 'owbn-client'); ?>
-            </option>
-            <option value="region-desc" <?php selected($sort_by === 'region' && $sort_dir === 'desc'); ?>>
-                <?php esc_html_e('Region (Z–A)', 'owbn-client'); ?>
-            </option>
-        </select>
-    </div>
     <script>
-        function owcTerritorySort(el) {
-            var parts = el.value.split('-');
-            var url = new URL(window.location);
-            url.searchParams.set('tsort', parts[0]);
-            url.searchParams.set('tdir', parts[1]);
-            url.searchParams.set('tpage', '1');
-            window.location = url;
-        }
+        (function() {
+            const container = document.getElementById('<?php echo esc_js($container_id); ?>');
+            const data = <?php echo wp_json_encode(owc_prepare_territory_list_data($territories)); ?>;
+            const slugTypes = <?php echo wp_json_encode($slug_types); ?>;
+            const chroniclesBase = '<?php echo esc_js(owc_get_chronicles_slug()); ?>';
+            const coordinatorsBase = '<?php echo esc_js(owc_get_coordinators_slug()); ?>';
+            const perPage = 25;
+
+            let page = 1;
+            let sortKey = 'title';
+            let sortDir = 'asc';
+            let searchTerm = '';
+            let filtered = [...data];
+
+            const tbody = container.querySelector('.owc-terr-tbody');
+            const pageInfo = container.querySelector('.owc-terr-page-info');
+            const countInfo = container.querySelector('.owc-territories-count');
+            const prevBtn = container.querySelector('.owc-terr-prev');
+            const nextBtn = container.querySelector('.owc-terr-next');
+            const sortSelect = container.querySelector('.owc-terr-sort');
+            const searchInput = container.querySelector('.owc-terr-search-input');
+            const modal = container.querySelector('.owc-terr-modal');
+            const modalBody = container.querySelector('.owc-terr-modal-body');
+            const modalClose = container.querySelector('.owc-terr-modal-close');
+            const modalBackdrop = container.querySelector('.owc-terr-modal-backdrop');
+
+            function escapeHtml(str) {
+                if (!str) return '';
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            function filterData() {
+                if (!searchTerm) {
+                    filtered = [...data];
+                } else {
+                    const term = searchTerm.toLowerCase();
+                    filtered = data.filter(t => {
+                        const searchable = [
+                            t.title,
+                            t.detail,
+                            t.slugs.join(' ')
+                        ].join(' ').toLowerCase();
+                        return searchable.includes(term);
+                    });
+                }
+                sortData();
+            }
+
+            function sortData() {
+                filtered.sort((a, b) => {
+                    const va = (a[sortKey] || '').toLowerCase();
+                    const vb = (b[sortKey] || '').toLowerCase();
+                    const cmp = va.localeCompare(vb);
+                    return sortDir === 'desc' ? -cmp : cmp;
+                });
+            }
+
+            function renderSlugLinks(slugs) {
+                if (!slugs || !slugs.length) return '';
+                return slugs.map(slug => {
+                    const type = slugTypes[slug];
+                    if (type === 'chronicle') {
+                        return `<a href="/${chroniclesBase}/?slug=${encodeURIComponent(slug)}">${escapeHtml(slug)}</a>`;
+                    } else if (type === 'coordinator') {
+                        return `<a href="/${coordinatorsBase}/?slug=${encodeURIComponent(slug)}">${escapeHtml(slug)}</a>`;
+                    }
+                    return escapeHtml(slug);
+                }).join(', ');
+            }
+
+            function render() {
+                const total = filtered.length;
+                const pages = Math.ceil(total / perPage);
+                page = Math.max(1, Math.min(page, pages || 1));
+                const start = (page - 1) * perPage;
+                const paged = filtered.slice(start, start + perPage);
+
+                tbody.innerHTML = paged.map(t => `
+                <tr data-id="${t.id}">
+                    <td class="owc-col-title">
+                        <a href="#" class="owc-terr-detail-link" data-id="${t.id}">${escapeHtml(t.title)}</a>
+                    </td>
+                    <td class="owc-col-detail">${escapeHtml(t.detail || '')}</td>
+                    <td class="owc-col-slugs">${renderSlugLinks(t.slugs)}</td>
+                </tr>
+            `).join('');
+
+                pageInfo.textContent = pages > 0 ?
+                    `<?php esc_html_e('Page', 'owbn-client'); ?> ${page} / ${pages}` :
+                    '';
+
+                const endIdx = Math.min(start + perPage, total);
+                countInfo.textContent = total > 0 ?
+                    `<?php esc_html_e('Showing', 'owbn-client'); ?> ${start + 1}–${endIdx} <?php esc_html_e('of', 'owbn-client'); ?> ${total} <?php esc_html_e('territories', 'owbn-client'); ?>` :
+                    '<?php esc_html_e('No territories found.', 'owbn-client'); ?>';
+
+                prevBtn.disabled = page <= 1;
+                nextBtn.disabled = page >= pages;
+
+                // Bind detail links
+                tbody.querySelectorAll('.owc-terr-detail-link').forEach(link => {
+                    link.addEventListener('click', e => {
+                        e.preventDefault();
+                        const id = parseInt(link.dataset.id);
+                        showDetail(id);
+                    });
+                });
+            }
+
+            function showDetail(id) {
+                const t = data.find(item => item.id === id);
+                if (!t) return;
+
+                modalBody.innerHTML = `
+                <h2>${escapeHtml(t.title)}</h2>
+                <div class="owc-territory-meta">
+                    ${t.country_names ? `
+                        <div class="owc-territory-row">
+                            <span class="owc-label"><?php esc_html_e('Country', 'owbn-client'); ?></span>
+                            <span class="owc-value">${escapeHtml(t.country_names)}</span>
+                        </div>
+                    ` : ''}
+                    ${t.region ? `
+                        <div class="owc-territory-row">
+                            <span class="owc-label"><?php esc_html_e('Region', 'owbn-client'); ?></span>
+                            <span class="owc-value">${escapeHtml(t.region)}</span>
+                        </div>
+                    ` : ''}
+                    ${t.location ? `
+                        <div class="owc-territory-row">
+                            <span class="owc-label"><?php esc_html_e('Location', 'owbn-client'); ?></span>
+                            <span class="owc-value">${escapeHtml(t.location)}</span>
+                        </div>
+                    ` : ''}
+                    ${t.detail ? `
+                        <div class="owc-territory-row">
+                            <span class="owc-label"><?php esc_html_e('Detail', 'owbn-client'); ?></span>
+                            <span class="owc-value">${escapeHtml(t.detail)}</span>
+                        </div>
+                    ` : ''}
+                    ${t.owner ? `
+                        <div class="owc-territory-row">
+                            <span class="owc-label"><?php esc_html_e('Owner', 'owbn-client'); ?></span>
+                            <span class="owc-value">${escapeHtml(t.owner)}</span>
+                        </div>
+                    ` : ''}
+                    ${t.slugs && t.slugs.length ? `
+                        <div class="owc-territory-row">
+                            <span class="owc-label"><?php esc_html_e('Assigned To', 'owbn-client'); ?></span>
+                            <span class="owc-value">${renderSlugLinks(t.slugs)}</span>
+                        </div>
+                    ` : ''}
+                    ${t.update_date ? `
+                        <div class="owc-territory-row">
+                            <span class="owc-label"><?php esc_html_e('Last Updated', 'owbn-client'); ?></span>
+                            <span class="owc-value">${escapeHtml(t.update_date)}</span>
+                        </div>
+                    ` : ''}
+                    ${t.update_user ? `
+                        <div class="owc-territory-row">
+                            <span class="owc-label"><?php esc_html_e('Updated By', 'owbn-client'); ?></span>
+                            <span class="owc-value">${escapeHtml(t.update_user)}</span>
+                        </div>
+                    ` : ''}
+                </div>
+                ${t.description ? `
+                    <div class="owc-territory-description">
+                        <h3><?php esc_html_e('Description & Approval Parameters', 'owbn-client'); ?></h3>
+                        <div class="owc-content">${t.description}</div>
+                    </div>
+                ` : ''}
+            `;
+
+                modal.hidden = false;
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal() {
+                modal.hidden = true;
+                document.body.style.overflow = '';
+            }
+
+            // Event listeners
+            sortSelect.addEventListener('change', () => {
+                const [key, dir] = sortSelect.value.split('-');
+                sortKey = key;
+                sortDir = dir;
+                sortData();
+                page = 1;
+                render();
+            });
+
+            let searchTimeout;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchTerm = searchInput.value.trim();
+                    filterData();
+                    page = 1;
+                    render();
+                }, 300);
+            });
+
+            prevBtn.addEventListener('click', () => {
+                page--;
+                render();
+            });
+            nextBtn.addEventListener('click', () => {
+                page++;
+                render();
+            });
+
+            modalClose.addEventListener('click', closeModal);
+            modalBackdrop.addEventListener('click', closeModal);
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && !modal.hidden) closeModal();
+            });
+
+            // Initial render
+            filterData();
+            render();
+        })();
     </script>
 <?php
     return ob_get_clean();
 }
 
 /**
- * Render pagination controls.
+ * Prepare territory data for list JSON output.
  *
- * @param int    $current
- * @param int    $total
- * @param string $sort_by
- * @param string $sort_dir
- * @return string HTML
+ * @param array $territories
+ * @return array
  */
-function owc_render_territories_pagination(int $current, int $total, string $sort_by, string $sort_dir): string
+function owc_prepare_territory_list_data(array $territories): array
 {
-    ob_start();
-?>
-    <nav class="owc-pagination">
-        <?php if ($current > 1) : ?>
-            <a href="<?php echo esc_url(add_query_arg(['tpage' => $current - 1, 'tsort' => $sort_by, 'tdir' => $sort_dir])); ?>" class="owc-page-prev">
-                &laquo; <?php esc_html_e('Previous', 'owbn-client'); ?>
-            </a>
-        <?php endif; ?>
-
-        <span class="owc-page-info">
-            <?php printf(esc_html__('Page %1$d of %2$d', 'owbn-client'), $current, $total); ?>
-        </span>
-
-        <?php if ($current < $total) : ?>
-            <a href="<?php echo esc_url(add_query_arg(['tpage' => $current + 1, 'tsort' => $sort_by, 'tdir' => $sort_dir])); ?>" class="owc-page-next">
-                <?php esc_html_e('Next', 'owbn-client'); ?> &raquo;
-            </a>
-        <?php endif; ?>
-    </nav>
-<?php
-    return ob_get_clean();
+    return array_map(function ($t) {
+        $countries = $t['countries'] ?? [];
+        return [
+            'id'            => $t['id'] ?? 0,
+            'title'         => html_entity_decode($t['title'] ?? ''),
+            'countries'     => $countries,
+            'country_names' => owc_render_territory_countries($countries),
+            'region'        => $t['region'] ?? '',
+            'location'      => $t['location'] ?? '',
+            'detail'        => $t['detail'] ?? '',
+            'description'   => $t['description'] ?? '',
+            'owner'         => $t['owner'] ?? '',
+            'slugs'         => $t['slugs'] ?? [],
+            'update_date'   => $t['update_date'] ?? '',
+            'update_user'   => $t['update_user'] ?? '',
+        ];
+    }, array_values($territories));
 }

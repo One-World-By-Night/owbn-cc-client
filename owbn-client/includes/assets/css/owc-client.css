@@ -470,3 +470,79 @@ body:has(.owc-coordinator-detail) {
     color: #666;
     font-style: italic;
 }
+
+/* Territory list controls */
+.owc-terr-controls {
+    display: flex;
+    gap: 1em;
+    margin-bottom: 1em;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.owc-terr-search {
+    flex: 1;
+    min-width: 200px;
+}
+
+.owc-terr-search-input {
+    width: 100%;
+    padding: 0.5em 0.75em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+/* Territory modal */
+.owc-terr-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.owc-terr-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.owc-terr-modal-content {
+    position: relative;
+    background: #fff;
+    max-width: 800px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: 8px;
+    padding: 2em;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.owc-terr-modal-close {
+    position: absolute;
+    top: 0.5em;
+    right: 0.75em;
+    font-size: 1.75em;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    line-height: 1;
+}
+
+.owc-terr-modal-close:hover {
+    color: #000;
+}
+
+.owc-terr-modal[hidden] {
+    display: none;
+}
