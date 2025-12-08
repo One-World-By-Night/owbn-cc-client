@@ -1,124 +1,142 @@
 <?php
 
 /**
- * OWBN-CC-Client Shortcode
+ * OWBN-Client Shortcode
  * 
- * @package OWBN-CC-Client
- * @version 1.1.0
+ * @package OWBN-Client
+ * @version 2.0.0
  */
 
 defined('ABSPATH') || exit;
 
-add_shortcode('cc-client', 'ccc_shortcode_handler');
+add_shortcode('owc-client', 'owc_shortcode_handler');
+add_shortcode('cc-client', 'owc_shortcode_handler'); // Legacy support
 
 /**
  * Shortcode handler.
  * 
  * Usage:
- *   [cc-client type="chronicle-list"]
- *   [cc-client type="coordinator-list"]
- *   [cc-client type="chronicle-detail" slug="mckn"]
- *   [cc-client type="coordinator-detail" slug="assamite"]
- *   [cc-client type="chronicle-detail"]  (reads ?slug= from URL)
- *   [cc-client type="coordinator-detail"]  (reads ?slug= from URL)
+ *   [owc-client type="chronicle-list"]
+ *   [owc-client type="coordinator-list"]
+ *   [owc-client type="territory-list"]
+ *   [owc-client type="chronicle-detail" slug="mckn"]
+ *   [owc-client type="coordinator-detail" slug="assamite"]
+ *   [owc-client type="territory-detail" id="123"]
+ *   [owc-client type="chronicle-detail"]  (reads ?slug= from URL)
+ *   [owc-client type="coordinator-detail"]  (reads ?slug= from URL)
+ *   [owc-client type="territory-detail"]  (reads ?id= from URL)
  */
-function ccc_shortcode_handler($atts)
+function owc_shortcode_handler($atts)
 {
     $atts = shortcode_atts([
         'type' => '',
         'slug' => '',
-    ], $atts, 'cc-client');
+        'id'   => '',
+    ], $atts, 'owc-client');
 
     $type = sanitize_text_field($atts['type']);
     $slug = sanitize_text_field($atts['slug']);
+    $id   = absint($atts['id']);
 
-    // If no slug or explicitly from-url, check URL parameter
-    if (empty($slug) || $slug === 'from-url') {
+    // If no slug, check URL parameter
+    if (empty($slug)) {
         $slug = isset($_GET['slug']) ? sanitize_title($_GET['slug']) : '';
     }
 
+    // If no id, check URL parameter
+    if (empty($id)) {
+        $id = isset($_GET['id']) ? absint($_GET['id']) : 0;
+    }
+
     // Enqueue assets
-    ccc_enqueue_assets_forced();
+    owc_enqueue_assets_forced();
 
     switch ($type) {
         case 'chronicle-list':
-            if (!get_option(ccc_option_name('enable_chronicles'), false)) {
-                return '<p class="ccc-error">' . esc_html__('Chronicles are not enabled.', 'owbn-cc-client') . '</p>';
+            if (!owc_chronicles_enabled()) {
+                return '<p class="owc-error">' . esc_html__('Chronicles are not enabled.', 'owbn-client') . '</p>';
             }
-            $data = ccc_fetch_list('chronicles');
-            return ccc_render_chronicles_list($data);
+            $data = owc_fetch_list('chronicles');
+            return owc_render_chronicles_list($data);
 
         case 'coordinator-list':
-            if (!get_option(ccc_option_name('enable_coordinators'), false)) {
-                return '<p class="ccc-error">' . esc_html__('Coordinators are not enabled.', 'owbn-cc-client') . '</p>';
+            if (!owc_coordinators_enabled()) {
+                return '<p class="owc-error">' . esc_html__('Coordinators are not enabled.', 'owbn-client') . '</p>';
             }
-            $data = ccc_fetch_list('coordinators');
-            return ccc_render_coordinators_list($data);
+            $data = owc_fetch_list('coordinators');
+            return owc_render_coordinators_list($data);
+
+        case 'territory-list':
+            if (!owc_territories_enabled()) {
+                return '<p class="owc-error">' . esc_html__('Territories are not enabled.', 'owbn-client') . '</p>';
+            }
+            $data = owc_fetch_list('territories');
+            return owc_render_territories_list($data);
 
         case 'chronicle-detail':
-            if (!get_option(ccc_option_name('enable_chronicles'), false)) {
-                return '<p class="ccc-error">' . esc_html__('Chronicles are not enabled.', 'owbn-cc-client') . '</p>';
+            if (!owc_chronicles_enabled()) {
+                return '<p class="owc-error">' . esc_html__('Chronicles are not enabled.', 'owbn-client') . '</p>';
             }
             if (empty($slug)) {
-                return '<p class="ccc-error">' . esc_html__('None Selected', 'owbn-cc-client') . '</p>';
+                return '<p class="owc-error">' . esc_html__('No chronicle selected.', 'owbn-client') . '</p>';
             }
-            $data = ccc_fetch_detail('chronicles', $slug);
-            return ccc_render_chronicle_detail($data);
+            $data = owc_fetch_detail('chronicles', $slug);
+            return owc_render_chronicle_detail($data);
 
         case 'coordinator-detail':
-            if (!get_option(ccc_option_name('enable_coordinators'), false)) {
-                return '<p class="ccc-error">' . esc_html__('Coordinators are not enabled.', 'owbn-cc-client') . '</p>';
+            if (!owc_coordinators_enabled()) {
+                return '<p class="owc-error">' . esc_html__('Coordinators are not enabled.', 'owbn-client') . '</p>';
             }
             if (empty($slug)) {
-                return '<p class="ccc-error">' . esc_html__('None Selected', 'owbn-cc-client') . '</p>';
+                return '<p class="owc-error">' . esc_html__('No coordinator selected.', 'owbn-client') . '</p>';
             }
-            $data = ccc_fetch_detail('coordinators', $slug);
-            return ccc_render_coordinator_detail($data);
+            $data = owc_fetch_detail('coordinators', $slug);
+            return owc_render_coordinator_detail($data);
+
+        case 'territory-detail':
+            if (!owc_territories_enabled()) {
+                return '<p class="owc-error">' . esc_html__('Territories are not enabled.', 'owbn-client') . '</p>';
+            }
+            if (empty($id)) {
+                return '<p class="owc-error">' . esc_html__('No territory selected.', 'owbn-client') . '</p>';
+            }
+            $data = owc_fetch_detail('territories', $id);
+            return owc_render_territory_detail($data);
 
         default:
-            return '<p class="ccc-error">' . esc_html__('Invalid shortcode type.', 'owbn-cc-client') . '</p>';
+            return '<p class="owc-error">' . esc_html__('Invalid shortcode type.', 'owbn-client') . '</p>';
     }
 }
 
 /**
  * Force enqueue assets when shortcode is used.
  */
-function ccc_enqueue_assets_forced()
+function owc_enqueue_assets_forced()
 {
     static $enqueued = false;
     if ($enqueued) return;
 
-    // Register first (in case not already registered)
     wp_register_style(
-        'ccc-tables',
-        CCC_PLUGIN_URL . 'css/ccc-tables.css',
+        'owc-client',
+        OWC_PLUGIN_URL . 'assets/css/owc-client.css',
         [],
-        '1.0.0'
-    );
-
-    wp_register_style(
-        'ccc-client',
-        CCC_PLUGIN_URL . 'css/ccc-client.css',
-        ['ccc-tables'],
-        '1.0.0'
+        OWC_VERSION
     );
 
     wp_register_script(
-        'ccc-tables',
-        CCC_PLUGIN_URL . 'js/ccc-tables.js',
+        'owc-client',
+        OWC_PLUGIN_URL . 'assets/js/owc-client.js',
         [],
-        '1.0.0',
+        OWC_VERSION,
         true
     );
 
-    // Enqueue
-    wp_enqueue_style('ccc-tables');
-    wp_enqueue_style('ccc-client');
-    wp_enqueue_script('ccc-tables');
+    wp_enqueue_style('owc-client');
+    wp_enqueue_script('owc-client');
 
     // Force print if headers already sent (shortcode runs late)
     if (did_action('wp_head')) {
-        wp_print_styles(['ccc-tables', 'ccc-client']);
+        wp_print_styles(['owc-client']);
     }
 
     $enqueued = true;

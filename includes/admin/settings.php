@@ -1,10 +1,10 @@
 <?php
 
 /**
- * OWBN-CC-Client Settings Page
+ * OWBN-Client Settings Page
  * location : includes/admin/settings.php
- * @package OWBN-CC-Client
- * @version 1.1.0
+ * @package OWBN-Client
+ * @version 2.0.0
  */
 
 defined('ABSPATH') || exit;
@@ -14,67 +14,104 @@ defined('ABSPATH') || exit;
 // ══════════════════════════════════════════════════════════════════════════════
 
 add_action('admin_init', function () {
-    $group = ccc_get_client_id() . '_ccc_settings';
+    $group = owc_get_client_id() . '_owc_settings';
 
     // Chronicles
-    register_setting($group, ccc_option_name('enable_chronicles'), [
+    register_setting($group, owc_option_name('enable_chronicles'), [
         'type' => 'boolean',
         'default' => false,
         'sanitize_callback' => 'rest_sanitize_boolean',
     ]);
-    register_setting($group, ccc_option_name('chronicles_mode'), [
+    register_setting($group, owc_option_name('chronicles_mode'), [
         'type' => 'string',
         'default' => 'local',
         'sanitize_callback' => 'sanitize_text_field',
     ]);
-    register_setting($group, ccc_option_name('chronicles_url'), [
+    register_setting($group, owc_option_name('chronicles_url'), [
         'type' => 'string',
         'sanitize_callback' => 'esc_url_raw',
     ]);
-    register_setting($group, ccc_option_name('chronicles_api_key'), [
+    register_setting($group, owc_option_name('chronicles_api_key'), [
         'type' => 'string',
         'sanitize_callback' => 'sanitize_text_field',
     ]);
 
     // Coordinators
-    register_setting($group, ccc_option_name('enable_coordinators'), [
+    register_setting($group, owc_option_name('enable_coordinators'), [
         'type' => 'boolean',
         'default' => false,
         'sanitize_callback' => 'rest_sanitize_boolean',
     ]);
-    register_setting($group, ccc_option_name('coordinators_mode'), [
+    register_setting($group, owc_option_name('coordinators_mode'), [
         'type' => 'string',
         'default' => 'local',
         'sanitize_callback' => 'sanitize_text_field',
     ]);
-    register_setting($group, ccc_option_name('coordinators_url'), [
+    register_setting($group, owc_option_name('coordinators_url'), [
         'type' => 'string',
         'sanitize_callback' => 'esc_url_raw',
     ]);
-    register_setting($group, ccc_option_name('coordinators_api_key'), [
+    register_setting($group, owc_option_name('coordinators_api_key'), [
+        'type' => 'string',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+
+    // Territories
+    register_setting($group, owc_option_name('enable_territories'), [
+        'type' => 'boolean',
+        'default' => false,
+        'sanitize_callback' => 'rest_sanitize_boolean',
+    ]);
+    register_setting($group, owc_option_name('territories_mode'), [
+        'type' => 'string',
+        'default' => 'local',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+    register_setting($group, owc_option_name('territories_url'), [
+        'type' => 'string',
+        'sanitize_callback' => 'esc_url_raw',
+    ]);
+    register_setting($group, owc_option_name('territories_api_key'), [
         'type' => 'string',
         'sanitize_callback' => 'sanitize_text_field',
     ]);
 
     // Page Settings
-    register_setting($group, ccc_option_name('chronicles_list_page'), [
+    register_setting($group, owc_option_name('chronicles_list_page'), [
         'type' => 'integer',
         'default' => 0,
         'sanitize_callback' => 'absint',
     ]);
-    register_setting($group, ccc_option_name('chronicles_detail_page'), [
+    register_setting($group, owc_option_name('chronicles_detail_page'), [
         'type' => 'integer',
         'default' => 0,
         'sanitize_callback' => 'absint',
     ]);
-    register_setting($group, ccc_option_name('coordinators_list_page'), [
+    register_setting($group, owc_option_name('coordinators_list_page'), [
         'type' => 'integer',
         'default' => 0,
         'sanitize_callback' => 'absint',
     ]);
-    register_setting($group, ccc_option_name('coordinators_detail_page'), [
+    register_setting($group, owc_option_name('coordinators_detail_page'), [
         'type' => 'integer',
         'default' => 0,
+        'sanitize_callback' => 'absint',
+    ]);
+    register_setting($group, owc_option_name('territories_list_page'), [
+        'type' => 'integer',
+        'default' => 0,
+        'sanitize_callback' => 'absint',
+    ]);
+    register_setting($group, owc_option_name('territories_detail_page'), [
+        'type' => 'integer',
+        'default' => 0,
+        'sanitize_callback' => 'absint',
+    ]);
+
+    // Cache
+    register_setting($group, owc_option_name('cache_ttl'), [
+        'type' => 'integer',
+        'default' => 3600,
         'sanitize_callback' => 'absint',
     ]);
 });
@@ -83,35 +120,44 @@ add_action('admin_init', function () {
 // RENDER SETTINGS PAGE
 // ══════════════════════════════════════════════════════════════════════════════
 
-function ccc_render_settings_page()
+function owc_render_settings_page()
 {
     if (!current_user_can('manage_options')) {
         return;
     }
 
-    $client_id = ccc_get_client_id();
-    $group = $client_id . '_ccc_settings';
+    $client_id = owc_get_client_id();
+    $group = $client_id . '_owc_settings';
 
     // Current values
-    $chron_enabled = get_option(ccc_option_name('enable_chronicles'), false);
-    $chron_mode    = get_option(ccc_option_name('chronicles_mode'), 'local');
-    $chron_url     = get_option(ccc_option_name('chronicles_url'), '');
-    $chron_key     = get_option(ccc_option_name('chronicles_api_key'), '');
+    $chron_enabled = get_option(owc_option_name('enable_chronicles'), false);
+    $chron_mode    = get_option(owc_option_name('chronicles_mode'), 'local');
+    $chron_url     = get_option(owc_option_name('chronicles_url'), '');
+    $chron_key     = get_option(owc_option_name('chronicles_api_key'), '');
 
-    $coord_enabled = get_option(ccc_option_name('enable_coordinators'), false);
-    $coord_mode    = get_option(ccc_option_name('coordinators_mode'), 'local');
-    $coord_url     = get_option(ccc_option_name('coordinators_url'), '');
-    $coord_key     = get_option(ccc_option_name('coordinators_api_key'), '');
+    $coord_enabled = get_option(owc_option_name('enable_coordinators'), false);
+    $coord_mode    = get_option(owc_option_name('coordinators_mode'), 'local');
+    $coord_url     = get_option(owc_option_name('coordinators_url'), '');
+    $coord_key     = get_option(owc_option_name('coordinators_api_key'), '');
+
+    $terr_enabled = get_option(owc_option_name('enable_territories'), false);
+    $terr_mode    = get_option(owc_option_name('territories_mode'), 'local');
+    $terr_url     = get_option(owc_option_name('territories_url'), '');
+    $terr_key     = get_option(owc_option_name('territories_api_key'), '');
 
     // Page settings
-    $chron_list_page   = get_option(ccc_option_name('chronicles_list_page'), 0);
-    $chron_detail_page = get_option(ccc_option_name('chronicles_detail_page'), 0);
-    $coord_list_page   = get_option(ccc_option_name('coordinators_list_page'), 0);
-    $coord_detail_page = get_option(ccc_option_name('coordinators_detail_page'), 0);
+    $chron_list_page   = get_option(owc_option_name('chronicles_list_page'), 0);
+    $chron_detail_page = get_option(owc_option_name('chronicles_detail_page'), 0);
+    $coord_list_page   = get_option(owc_option_name('coordinators_list_page'), 0);
+    $coord_detail_page = get_option(owc_option_name('coordinators_detail_page'), 0);
+    $terr_list_page    = get_option(owc_option_name('territories_list_page'), 0);
+    $terr_detail_page  = get_option(owc_option_name('territories_detail_page'), 0);
+
+    $cache_ttl = get_option(owc_option_name('cache_ttl'), 3600);
 
 ?>
     <div class="wrap">
-        <h1><?php esc_html_e('OWBN CC Client Settings', 'owbn-cc-client'); ?></h1>
+        <h1><?php esc_html_e('OWBN Client Settings', 'owbn-client'); ?></h1>
 
         <?php settings_errors(); ?>
 
@@ -119,71 +165,62 @@ function ccc_render_settings_page()
             <?php settings_fields($group); ?>
 
             <!-- CHRONICLES -->
-            <h2><?php esc_html_e('Chronicles', 'owbn-cc-client'); ?></h2>
+            <h2><?php esc_html_e('Chronicles', 'owbn-client'); ?></h2>
             <table class="form-table" role="presentation">
                 <tr>
-                    <th scope="row"><?php esc_html_e('Enable', 'owbn-cc-client'); ?></th>
+                    <th scope="row"><?php esc_html_e('Enable', 'owbn-client'); ?></th>
                     <td>
                         <label>
-                            <input type="hidden" name="<?php echo esc_attr(ccc_option_name('enable_chronicles')); ?>" value="0" />
+                            <input type="hidden" name="<?php echo esc_attr(owc_option_name('enable_chronicles')); ?>" value="0" />
                             <input type="checkbox"
-                                name="<?php echo esc_attr(ccc_option_name('enable_chronicles')); ?>"
-                                id="ccc_enable_chronicles"
+                                name="<?php echo esc_attr(owc_option_name('enable_chronicles')); ?>"
+                                id="owc_enable_chronicles"
                                 value="1"
                                 <?php checked($chron_enabled); ?> />
-                            <?php esc_html_e('Enable Chronicles', 'owbn-cc-client'); ?>
+                            <?php esc_html_e('Enable Chronicles', 'owbn-client'); ?>
                         </label>
                     </td>
                 </tr>
-                <tr class="ccc-chronicles-options" <?php echo $chron_enabled ? '' : 'style="display:none;"'; ?>>
-                    <th scope="row"><?php esc_html_e('Data Source', 'owbn-cc-client'); ?></th>
+                <tr class="owc-chronicles-options" <?php echo $chron_enabled ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('Data Source', 'owbn-client'); ?></th>
                     <td>
                         <fieldset>
                             <label>
                                 <input type="radio"
-                                    name="<?php echo esc_attr(ccc_option_name('chronicles_mode')); ?>"
-                                    class="ccc-chronicles-mode"
+                                    name="<?php echo esc_attr(owc_option_name('chronicles_mode')); ?>"
+                                    class="owc-chronicles-mode"
                                     value="local"
                                     <?php checked($chron_mode, 'local'); ?> />
-                                <?php esc_html_e('Local (same site)', 'owbn-cc-client'); ?>
+                                <?php esc_html_e('Local (same site)', 'owbn-client'); ?>
                             </label><br>
                             <label>
                                 <input type="radio"
-                                    name="<?php echo esc_attr(ccc_option_name('chronicles_mode')); ?>"
-                                    class="ccc-chronicles-mode"
+                                    name="<?php echo esc_attr(owc_option_name('chronicles_mode')); ?>"
+                                    class="owc-chronicles-mode"
                                     value="remote"
                                     <?php checked($chron_mode, 'remote'); ?> />
-                                <?php esc_html_e('Remote API', 'owbn-cc-client'); ?>
+                                <?php esc_html_e('Remote API', 'owbn-client'); ?>
                             </label>
                         </fieldset>
                     </td>
                 </tr>
-                <tr class="ccc-chronicles-options ccc-chronicles-remote" <?php echo ($chron_enabled && $chron_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
-                    <th scope="row"><?php esc_html_e('API URL', 'owbn-cc-client'); ?></th>
+                <tr class="owc-chronicles-options owc-chronicles-remote" <?php echo ($chron_enabled && $chron_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('API URL', 'owbn-client'); ?></th>
                     <td>
                         <input type="url"
-                            name="<?php echo esc_attr(ccc_option_name('chronicles_url')); ?>"
+                            name="<?php echo esc_attr(owc_option_name('chronicles_url')); ?>"
                             value="<?php echo esc_url($chron_url); ?>"
                             class="regular-text"
                             placeholder="https://example.com/wp-json/owbn-cc/v1/" />
                     </td>
                 </tr>
-                <tr class="ccc-chronicles-options ccc-chronicles-remote" <?php echo ($chron_enabled && $chron_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
-                    <th scope="row"><?php esc_html_e('API Key', 'owbn-cc-client'); ?></th>
+                <tr class="owc-chronicles-options owc-chronicles-remote" <?php echo ($chron_enabled && $chron_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('API Key', 'owbn-client'); ?></th>
                     <td>
                         <input type="text"
-                            name="<?php echo esc_attr(ccc_option_name('chronicles_api_key')); ?>"
+                            name="<?php echo esc_attr(owc_option_name('chronicles_api_key')); ?>"
                             value="<?php echo esc_attr($chron_key); ?>"
                             class="regular-text code" />
-                    </td>
-                </tr>
-                <tr class="ccc-chronicles-options ccc-chronicles-remote" <?php echo ($chron_enabled && $chron_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
-                    <th scope="row"></th>
-                    <td>
-                        <button type="button" class="button" id="ccc_test_chronicles_api">
-                            <?php esc_html_e('Test Connection', 'owbn-cc-client'); ?>
-                        </button>
-                        <span id="ccc_chronicles_test_result"></span>
                     </td>
                 </tr>
             </table>
@@ -191,71 +228,125 @@ function ccc_render_settings_page()
             <hr />
 
             <!-- COORDINATORS -->
-            <h2><?php esc_html_e('Coordinators', 'owbn-cc-client'); ?></h2>
+            <h2><?php esc_html_e('Coordinators', 'owbn-client'); ?></h2>
             <table class="form-table" role="presentation">
                 <tr>
-                    <th scope="row"><?php esc_html_e('Enable', 'owbn-cc-client'); ?></th>
+                    <th scope="row"><?php esc_html_e('Enable', 'owbn-client'); ?></th>
                     <td>
                         <label>
-                            <input type="hidden" name="<?php echo esc_attr(ccc_option_name('enable_coordinators')); ?>" value="0" />
+                            <input type="hidden" name="<?php echo esc_attr(owc_option_name('enable_coordinators')); ?>" value="0" />
                             <input type="checkbox"
-                                name="<?php echo esc_attr(ccc_option_name('enable_coordinators')); ?>"
-                                id="ccc_enable_coordinators"
+                                name="<?php echo esc_attr(owc_option_name('enable_coordinators')); ?>"
+                                id="owc_enable_coordinators"
                                 value="1"
                                 <?php checked($coord_enabled); ?> />
-                            <?php esc_html_e('Enable Coordinators', 'owbn-cc-client'); ?>
+                            <?php esc_html_e('Enable Coordinators', 'owbn-client'); ?>
                         </label>
                     </td>
                 </tr>
-                <tr class="ccc-coordinators-options" <?php echo $coord_enabled ? '' : 'style="display:none;"'; ?>>
-                    <th scope="row"><?php esc_html_e('Data Source', 'owbn-cc-client'); ?></th>
+                <tr class="owc-coordinators-options" <?php echo $coord_enabled ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('Data Source', 'owbn-client'); ?></th>
                     <td>
                         <fieldset>
                             <label>
                                 <input type="radio"
-                                    name="<?php echo esc_attr(ccc_option_name('coordinators_mode')); ?>"
-                                    class="ccc-coordinators-mode"
+                                    name="<?php echo esc_attr(owc_option_name('coordinators_mode')); ?>"
+                                    class="owc-coordinators-mode"
                                     value="local"
                                     <?php checked($coord_mode, 'local'); ?> />
-                                <?php esc_html_e('Local (same site)', 'owbn-cc-client'); ?>
+                                <?php esc_html_e('Local (same site)', 'owbn-client'); ?>
                             </label><br>
                             <label>
                                 <input type="radio"
-                                    name="<?php echo esc_attr(ccc_option_name('coordinators_mode')); ?>"
-                                    class="ccc-coordinators-mode"
+                                    name="<?php echo esc_attr(owc_option_name('coordinators_mode')); ?>"
+                                    class="owc-coordinators-mode"
                                     value="remote"
                                     <?php checked($coord_mode, 'remote'); ?> />
-                                <?php esc_html_e('Remote API', 'owbn-cc-client'); ?>
+                                <?php esc_html_e('Remote API', 'owbn-client'); ?>
                             </label>
                         </fieldset>
                     </td>
                 </tr>
-                <tr class="ccc-coordinators-options ccc-coordinators-remote" <?php echo ($coord_enabled && $coord_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
-                    <th scope="row"><?php esc_html_e('API URL', 'owbn-cc-client'); ?></th>
+                <tr class="owc-coordinators-options owc-coordinators-remote" <?php echo ($coord_enabled && $coord_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('API URL', 'owbn-client'); ?></th>
                     <td>
                         <input type="url"
-                            name="<?php echo esc_attr(ccc_option_name('coordinators_url')); ?>"
+                            name="<?php echo esc_attr(owc_option_name('coordinators_url')); ?>"
                             value="<?php echo esc_url($coord_url); ?>"
                             class="regular-text"
                             placeholder="https://example.com/wp-json/owbn-cc/v1/" />
                     </td>
                 </tr>
-                <tr class="ccc-coordinators-options ccc-coordinators-remote" <?php echo ($coord_enabled && $coord_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
-                    <th scope="row"><?php esc_html_e('API Key', 'owbn-cc-client'); ?></th>
+                <tr class="owc-coordinators-options owc-coordinators-remote" <?php echo ($coord_enabled && $coord_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('API Key', 'owbn-client'); ?></th>
                     <td>
                         <input type="text"
-                            name="<?php echo esc_attr(ccc_option_name('coordinators_api_key')); ?>"
+                            name="<?php echo esc_attr(owc_option_name('coordinators_api_key')); ?>"
                             value="<?php echo esc_attr($coord_key); ?>"
                             class="regular-text code" />
                     </td>
                 </tr>
-                <tr class="ccc-coordinators-options ccc-coordinators-remote" <?php echo ($coord_enabled && $coord_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
-                    <th scope="row"></th>
+            </table>
+
+            <hr />
+
+            <!-- TERRITORIES -->
+            <h2><?php esc_html_e('Territories', 'owbn-client'); ?></h2>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><?php esc_html_e('Enable', 'owbn-client'); ?></th>
                     <td>
-                        <button type="button" class="button" id="ccc_test_coordinators_api">
-                            <?php esc_html_e('Test Connection', 'owbn-cc-client'); ?>
-                        </button>
-                        <span id="ccc_coordinators_test_result"></span>
+                        <label>
+                            <input type="hidden" name="<?php echo esc_attr(owc_option_name('enable_territories')); ?>" value="0" />
+                            <input type="checkbox"
+                                name="<?php echo esc_attr(owc_option_name('enable_territories')); ?>"
+                                id="owc_enable_territories"
+                                value="1"
+                                <?php checked($terr_enabled); ?> />
+                            <?php esc_html_e('Enable Territories', 'owbn-client'); ?>
+                        </label>
+                    </td>
+                </tr>
+                <tr class="owc-territories-options" <?php echo $terr_enabled ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('Data Source', 'owbn-client'); ?></th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="radio"
+                                    name="<?php echo esc_attr(owc_option_name('territories_mode')); ?>"
+                                    class="owc-territories-mode"
+                                    value="local"
+                                    <?php checked($terr_mode, 'local'); ?> />
+                                <?php esc_html_e('Local (same site)', 'owbn-client'); ?>
+                            </label><br>
+                            <label>
+                                <input type="radio"
+                                    name="<?php echo esc_attr(owc_option_name('territories_mode')); ?>"
+                                    class="owc-territories-mode"
+                                    value="remote"
+                                    <?php checked($terr_mode, 'remote'); ?> />
+                                <?php esc_html_e('Remote API', 'owbn-client'); ?>
+                            </label>
+                        </fieldset>
+                    </td>
+                </tr>
+                <tr class="owc-territories-options owc-territories-remote" <?php echo ($terr_enabled && $terr_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('API URL', 'owbn-client'); ?></th>
+                    <td>
+                        <input type="url"
+                            name="<?php echo esc_attr(owc_option_name('territories_url')); ?>"
+                            value="<?php echo esc_url($terr_url); ?>"
+                            class="regular-text"
+                            placeholder="https://example.com/wp-json/owbn-tm/v1/" />
+                    </td>
+                </tr>
+                <tr class="owc-territories-options owc-territories-remote" <?php echo ($terr_enabled && $terr_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('API Key', 'owbn-client'); ?></th>
+                    <td>
+                        <input type="text"
+                            name="<?php echo esc_attr(owc_option_name('territories_api_key')); ?>"
+                            value="<?php echo esc_attr($terr_key); ?>"
+                            class="regular-text code" />
                     </td>
                 </tr>
             </table>
@@ -263,61 +354,90 @@ function ccc_render_settings_page()
             <hr />
 
             <!-- PAGE SETTINGS -->
-            <h2><?php esc_html_e('Page Settings', 'owbn-cc-client'); ?></h2>
-            <p class="description"><?php esc_html_e('Select which pages display the lists and detail views. Pages are created automatically on plugin activation.', 'owbn-cc-client'); ?></p>
+            <h2><?php esc_html_e('Page Settings', 'owbn-client'); ?></h2>
             <table class="form-table" role="presentation">
                 <tr>
-                    <th scope="row"><?php esc_html_e('Chronicles List Page', 'owbn-cc-client'); ?></th>
+                    <th scope="row"><?php esc_html_e('Chronicles List Page', 'owbn-client'); ?></th>
                     <td>
-                        <?php
-                        wp_dropdown_pages([
-                            'name'              => ccc_option_name('chronicles_list_page'),
+                        <?php wp_dropdown_pages([
+                            'name'              => owc_option_name('chronicles_list_page'),
                             'selected'          => $chron_list_page,
-                            'show_option_none'  => __('— Select Page —', 'owbn-cc-client'),
+                            'show_option_none'  => __('— Select Page —', 'owbn-client'),
                             'option_none_value' => 0,
-                        ]);
-                        ?>
+                        ]); ?>
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php esc_html_e('Chronicles Detail Page', 'owbn-cc-client'); ?></th>
+                    <th scope="row"><?php esc_html_e('Chronicles Detail Page', 'owbn-client'); ?></th>
                     <td>
-                        <?php
-                        wp_dropdown_pages([
-                            'name'              => ccc_option_name('chronicles_detail_page'),
+                        <?php wp_dropdown_pages([
+                            'name'              => owc_option_name('chronicles_detail_page'),
                             'selected'          => $chron_detail_page,
-                            'show_option_none'  => __('— Select Page —', 'owbn-cc-client'),
+                            'show_option_none'  => __('— Select Page —', 'owbn-client'),
                             'option_none_value' => 0,
-                        ]);
-                        ?>
-                        <p class="description"><?php esc_html_e('Links from the list will use ?slug=xxx to pass the chronicle.', 'owbn-cc-client'); ?></p>
+                        ]); ?>
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php esc_html_e('Coordinators List Page', 'owbn-cc-client'); ?></th>
+                    <th scope="row"><?php esc_html_e('Coordinators List Page', 'owbn-client'); ?></th>
                     <td>
-                        <?php
-                        wp_dropdown_pages([
-                            'name'              => ccc_option_name('coordinators_list_page'),
+                        <?php wp_dropdown_pages([
+                            'name'              => owc_option_name('coordinators_list_page'),
                             'selected'          => $coord_list_page,
-                            'show_option_none'  => __('— Select Page —', 'owbn-cc-client'),
+                            'show_option_none'  => __('— Select Page —', 'owbn-client'),
                             'option_none_value' => 0,
-                        ]);
-                        ?>
+                        ]); ?>
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php esc_html_e('Coordinators Detail Page', 'owbn-cc-client'); ?></th>
+                    <th scope="row"><?php esc_html_e('Coordinators Detail Page', 'owbn-client'); ?></th>
                     <td>
-                        <?php
-                        wp_dropdown_pages([
-                            'name'              => ccc_option_name('coordinators_detail_page'),
+                        <?php wp_dropdown_pages([
+                            'name'              => owc_option_name('coordinators_detail_page'),
                             'selected'          => $coord_detail_page,
-                            'show_option_none'  => __('— Select Page —', 'owbn-cc-client'),
+                            'show_option_none'  => __('— Select Page —', 'owbn-client'),
                             'option_none_value' => 0,
-                        ]);
-                        ?>
-                        <p class="description"><?php esc_html_e('Links from the list will use ?slug=xxx to pass the coordinator.', 'owbn-cc-client'); ?></p>
+                        ]); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e('Territories List Page', 'owbn-client'); ?></th>
+                    <td>
+                        <?php wp_dropdown_pages([
+                            'name'              => owc_option_name('territories_list_page'),
+                            'selected'          => $terr_list_page,
+                            'show_option_none'  => __('— Select Page —', 'owbn-client'),
+                            'option_none_value' => 0,
+                        ]); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e('Territories Detail Page', 'owbn-client'); ?></th>
+                    <td>
+                        <?php wp_dropdown_pages([
+                            'name'              => owc_option_name('territories_detail_page'),
+                            'selected'          => $terr_detail_page,
+                            'show_option_none'  => __('— Select Page —', 'owbn-client'),
+                            'option_none_value' => 0,
+                        ]); ?>
+                    </td>
+                </tr>
+            </table>
+
+            <hr />
+
+            <!-- CACHE SETTINGS -->
+            <h2><?php esc_html_e('Cache Settings', 'owbn-client'); ?></h2>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><?php esc_html_e('Cache TTL (seconds)', 'owbn-client'); ?></th>
+                    <td>
+                        <input type="number"
+                            name="<?php echo esc_attr(owc_option_name('cache_ttl')); ?>"
+                            value="<?php echo esc_attr($cache_ttl); ?>"
+                            class="small-text"
+                            min="0" />
+                        <p class="description"><?php esc_html_e('0 = no caching. Default: 3600 (1 hour)', 'owbn-client'); ?></p>
                     </td>
                 </tr>
             </table>
@@ -328,73 +448,26 @@ function ccc_render_settings_page()
 
     <script>
         (function($) {
-            // Chronicles toggle
-            $('#ccc_enable_chronicles').on('change', function() {
-                $('.ccc-chronicles-options').toggle(this.checked);
-                if (!this.checked) {
-                    $('.ccc-chronicles-remote').hide();
-                } else {
-                    var isRemote = $('.ccc-chronicles-mode:checked').val() === 'remote';
-                    $('.ccc-chronicles-remote').toggle(isRemote);
-                }
-            });
-
-            $('.ccc-chronicles-mode').on('change', function() {
-                $('.ccc-chronicles-remote').toggle(this.value === 'remote');
-            });
-
-            // Coordinators toggle
-            $('#ccc_enable_coordinators').on('change', function() {
-                $('.ccc-coordinators-options').toggle(this.checked);
-                if (!this.checked) {
-                    $('.ccc-coordinators-remote').hide();
-                } else {
-                    var isRemote = $('.ccc-coordinators-mode:checked').val() === 'remote';
-                    $('.ccc-coordinators-remote').toggle(isRemote);
-                }
-            });
-
-            $('.ccc-coordinators-mode').on('change', function() {
-                $('.ccc-coordinators-remote').toggle(this.value === 'remote');
-            });
-
-            // Test API buttons
-            $('#ccc_test_chronicles_api').on('click', function() {
-                ccc_test_api($(this), $('#ccc_chronicles_test_result'), 'chronicles',
-                    $('input[name="<?php echo esc_js(ccc_option_name('chronicles_url')); ?>"]').val(),
-                    $('input[name="<?php echo esc_js(ccc_option_name('chronicles_api_key')); ?>"]').val()
-                );
-            });
-
-            $('#ccc_test_coordinators_api').on('click', function() {
-                ccc_test_api($(this), $('#ccc_coordinators_test_result'), 'coordinators',
-                    $('input[name="<?php echo esc_js(ccc_option_name('coordinators_url')); ?>"]').val(),
-                    $('input[name="<?php echo esc_js(ccc_option_name('coordinators_api_key')); ?>"]').val()
-                );
-            });
-
-            function ccc_test_api($btn, $result, type, url, key) {
-                $btn.prop('disabled', true);
-                $result.html('<span style="color:#666;"><?php echo esc_js(__('Testing...', 'owbn-cc-client')); ?></span>');
-
-                $.post(ajaxurl, {
-                    action: 'ccc_test_api',
-                    nonce: '<?php echo wp_create_nonce('ccc_test_api_nonce'); ?>',
-                    type: type,
-                    url: url,
-                    api_key: key
-                }, function(response) {
-                    $btn.prop('disabled', false);
-                    if (response.success) {
-                        $result.html('<span style="color:green;">✓ ' + response.data.message + '</span>');
+            // Generic toggle handler
+            function setupToggle(prefix) {
+                $('#owc_enable_' + prefix).on('change', function() {
+                    $('.owc-' + prefix + '-options').toggle(this.checked);
+                    if (!this.checked) {
+                        $('.owc-' + prefix + '-remote').hide();
                     } else {
-                        $result.html('<span style="color:red;">✗ ' + response.data.message + '</span>');
+                        var isRemote = $('.owc-' + prefix + '-mode:checked').val() === 'remote';
+                        $('.owc-' + prefix + '-remote').toggle(isRemote);
                     }
-                }).fail(function() {
-                    $btn.prop('disabled', false);
-                    $result.html('<span style="color:red;">✗ <?php echo esc_js(__('Request failed.', 'owbn-cc-client')); ?></span>');
+                });
+
+                $('.owc-' + prefix + '-mode').on('change', function() {
+                    $('.owc-' + prefix + '-remote').toggle(this.value === 'remote');
                 });
             }
+
+            setupToggle('chronicles');
+            setupToggle('coordinators');
+            setupToggle('territories');
         })(jQuery);
     </script>
 <?php

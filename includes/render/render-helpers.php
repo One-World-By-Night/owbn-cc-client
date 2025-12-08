@@ -529,8 +529,8 @@ function owc_render_territory_countries(array $codes): string
 {
     if (empty($codes)) return '';
 
-    if (function_exists('owbn_tm_format_countries')) {
-        return owbn_tm_format_countries($codes);
+    if (function_exists('owc_tm_format_countries')) {
+        return owc_tm_format_countries($codes);
     }
 
     // Fallback if territory-manager not active

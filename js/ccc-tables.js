@@ -8,10 +8,10 @@
 
     function initSortableTables() {
         // Only enable sorting for chronicles list, not coordinators
-        const lists = document.querySelectorAll('.ccc-chronicles-list');
+        const lists = document.querySelectorAll('.owc-chronicles-list');
         
         lists.forEach(function(list) {
-            const header = list.querySelector('.ccc-list-header');
+            const header = list.querySelector('.owc-list-header');
             if (!header) return;
 
             const columns = header.querySelectorAll('div');
@@ -25,8 +25,8 @@
     }
 
     function sortTable(list, columnIndex, clickedHeader) {
-        const header = list.querySelector('.ccc-list-header');
-        const rows = Array.from(list.querySelectorAll('.ccc-list-row'));
+        const header = list.querySelector('.owc-list-header');
+        const rows = Array.from(list.querySelectorAll('.owc-list-row'));
         
         if (rows.length === 0) return;
 
@@ -60,8 +60,8 @@
     }
 
     function initFilters() {
-        const filterInputs = document.querySelectorAll('.ccc-filter-input');
-        const clearBtn = document.getElementById('ccc-clear-filters');
+        const filterInputs = document.querySelectorAll('.owc-filter-input');
+        const clearBtn = document.getElementById('owc-clear-filters');
         
         if (filterInputs.length === 0) return;
 
@@ -80,13 +80,13 @@
     }
 
     function applyFilters() {
-        const list = document.querySelector('.ccc-chronicles-list');
+        const list = document.querySelector('.owc-chronicles-list');
         if (!list) return;
 
-        const rows = list.querySelectorAll('.ccc-list-row');
+        const rows = list.querySelectorAll('.owc-list-row');
         const filters = {};
         
-        document.querySelectorAll('.ccc-filter-input').forEach(function(input) {
+        document.querySelectorAll('.owc-filter-input').forEach(function(input) {
             const col = parseInt(input.getAttribute('data-column'), 10);
             const val = input.value.trim().toLowerCase();
             if (val) {
@@ -115,7 +115,7 @@
         });
 
         // Show/hide no results message
-        const noResults = document.querySelector('.ccc-no-results-filtered');
+        const noResults = document.querySelector('.owc-no-results-filtered');
         if (noResults) {
             noResults.style.display = visibleCount === 0 ? '' : 'none';
         }

@@ -233,7 +233,7 @@ function owc_tm_get_country_list(): array
 /**
  * Get country name from ISO code.
  */
-function owbn_tm_get_country_name(string $code): string
+function owc_tm_get_country_name(string $code): string
 {
     $countries = owc_tm_get_country_list();
     return $countries[$code] ?? $code;
@@ -242,9 +242,9 @@ function owbn_tm_get_country_name(string $code): string
 /**
  * Get country names from array of ISO codes.
  */
-function owbn_tm_get_country_names(array $codes): array
+function owc_tm_get_country_names(array $codes): array
 {
-    return array_map('owbn_tm_get_country_name', $codes);
+    return array_map('owc_tm_get_country_name', $codes);
 }
 
 /**
@@ -253,7 +253,7 @@ function owbn_tm_get_country_names(array $codes): array
  * @param array $codes Array of ISO codes
  * @return string Comma-separated country names
  */
-function owbn_tm_format_countries(array $codes): string
+function owc_tm_format_countries(array $codes): string
 {
-    return implode(', ', owbn_tm_get_country_names($codes));
+    return implode(', ', owc_tm_get_country_names($codes));
 }
