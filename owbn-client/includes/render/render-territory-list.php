@@ -6,7 +6,7 @@
  * Client-side paginated, sortable, searchable territory listing with modal detail.
  * 
  * @package OWBN-Client
- * @version 2.1.1
+ * @version 2.1.2
  */
 
 defined('ABSPATH') || exit;
@@ -83,7 +83,7 @@ function owc_render_territories_list(array $territories, string $context = ''): 
             const container = document.getElementById('<?php echo esc_js($container_id); ?>');
             const data = <?php echo wp_json_encode(owc_prepare_territory_list_data($territories)); ?>;
             const slugTypes = <?php echo wp_json_encode($slug_types); ?>;
-            cconst chroniclesDetailUrl = '<?php echo esc_js(get_permalink(get_option(owc_option_name("chronicles_detail_page"), 0)) ?: ""); ?>';
+            const chroniclesDetailUrl = '<?php echo esc_js(get_permalink(get_option(owc_option_name("chronicles_detail_page"), 0)) ?: ""); ?>';
             const coordinatorsDetailUrl = '<?php echo esc_js(get_permalink(get_option(owc_option_name("coordinators_detail_page"), 0)) ?: ""); ?>';
             const perPage = 25;
 

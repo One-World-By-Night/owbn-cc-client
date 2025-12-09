@@ -4,7 +4,7 @@
  * OWBN-CC-Client Render Init
  * location: includes/render/init.php
  * @package OWBN-CC-Client
- * @version 1.1.0
+ * @version 2.1.2
  */
 
 defined('ABSPATH') || exit;

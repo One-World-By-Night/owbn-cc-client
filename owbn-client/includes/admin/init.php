@@ -4,7 +4,7 @@
  * OWBN-CC-Client Admin Init
  * location: includes/admin/init.php
  * @package OWBN-CC-Client
- * @version 2.1.1
+ * @version 2.1.2
  */
 
 defined('ABSPATH') || exit;

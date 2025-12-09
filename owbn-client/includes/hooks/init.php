@@ -4,7 +4,7 @@
  * OWBN-CC-Client Hooks Init
  * 
  * @package OWBN-CC-Client
- * @version 1.1.0
+ * @version 2.1.2
  */
 
 defined('ABSPATH') || exit;
